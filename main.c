@@ -20,8 +20,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-// See <https://github.com/sakhmatd/rogueutil>. 
-#include "rogueutil.h"
+static char *argv0;
+#include "arg.h" // Taken from <https://git.suckless.org/st>.
+#include "rogueutil.h" // Taken from <https://github.com/sakhmatd/rogueutil>.
 
 void usage();
 
@@ -53,7 +54,12 @@ void usage()
 
 int main(int argc, char *argv[])
 {
+	ARGBEGIN {
+	case 'h':
+	default:
+		usage();
+		break;
+	} ARGEND;
 
-	usage();
 	return 0;
 }
