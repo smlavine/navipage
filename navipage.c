@@ -18,10 +18,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-static char *argv0;
-#include "arg.h" // Taken from <https://git.suckless.org/st>.
 #include "rogueutil.h" // Taken from <https://github.com/sakhmatd/rogueutil>.
 
 void usage();
@@ -54,13 +53,34 @@ void usage()
 
 int main(int argc, char *argv[])
 {
-	ARGBEGIN {
-	case 'h':
-	default:
-		usage();
-		return 0;
-		break;
-	} ARGEND;
+	struct flags {
+		unsigned int process_options:1;
+	};
+
+	// loop through arguments
+	for (int i = 1; i < argc; i++) {
+
+		size_t len = strlen(argv[i]);
+		if (argv[i][0] == '-' && && len > 0 && flags.process_options) {
+			// loop through options
+			char *opt = argv[i];
+			while (*(++opt) != '\0') {
+				switch (*opt) {
+				case '-': // don't processing later arguments as options
+					flags.process_options = !flags.process_options;
+					break;
+				case 'h': // print help and exit
+				default:
+					usage();
+					return 0;
+					break;
+				}
+			}
+		} else {
+			// TODO: Depending on flags, do different things with option
+			// arguments, or just regular arguments.
+		}
+	}
 
 	return 0;
 }
