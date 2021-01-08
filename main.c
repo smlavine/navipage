@@ -16,6 +16,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,44 +54,24 @@ void usage()
 
 int main(int argc, char *argv[])
 {
-	struct {
-		unsigned int no_more_options:1;
-	} flags = {0};
-
-	// loop through arguments
-	for (int i = 1; i < argc; i++) {
-
-		size_t len = strlen(argv[i]);
-		if (!flags.no_more_options && argv[i][0] == '-' && len > 0) {
-			if (strspn(argv[i], "-abfh") == len) {
-				// loop through options
-				char *opt = argv[i];
-				while (*(++opt) != '\0') {
-					switch (*opt) {
-					case 'a':
-						puts("a case");
-						break;
-					case 'b':
-						puts("b case");
-						break;
-					case '-': // don't processing later arguments as options
-						flags.no_more_options = 1;
-						break;
-					case 'f':
-						puts("f in the chat boys");
-						break;
-					case 'h': // print help and exit
-					default:
-						usage();
-						return 0;
-						break;
-					}
-				}
-			} else {
-				// TODO: Depending on flags, do different things with option
-				// arguments, or just regular arguments.
-			}
+	int ch;
+	const char *optstring = "h";
+	while ((ch = getopt(argc, argv, optstring)) != -1) {
+		switch (ch) {
+		case 'h':
+			usage(); // FALLTHROUGH
+		case ':':
+		case '?':
+			exit(EXIT_FAILURE);
+			break;
 		}
+	}
+
+	argc -= optind;
+	argv += optind;
+
+	for (int i = optind - 1; i < argc; i++) {
+		// TODO: handle arguments
 	}
 
 	return 0;
