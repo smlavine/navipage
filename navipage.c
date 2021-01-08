@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	for (int i = 1; i < argc; i++) {
 
 		size_t len = strlen(argv[i]);
-		if (argv[i][0] == '-' && && len > 0 && flags.process_options) {
+		if (argv[i][0] == '-' && len > 0 && flags.process_options) {
 			// loop through options
 			char *opt = argv[i];
 			while (*(++opt) != '\0') {
