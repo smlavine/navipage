@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
 	case 'h':
 	default:
 		usage();
+		return 0;
 		break;
 	} ARGEND;
 
