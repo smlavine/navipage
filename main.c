@@ -53,32 +53,43 @@ void usage()
 
 int main(int argc, char *argv[])
 {
-	struct flags {
-		unsigned int process_options:1;
-	};
+	struct {
+		unsigned int no_more_options:1;
+	} flags = {0};
 
 	// loop through arguments
 	for (int i = 1; i < argc; i++) {
 
 		size_t len = strlen(argv[i]);
-		if (argv[i][0] == '-' && len > 0 && flags.process_options) {
-			// loop through options
-			char *opt = argv[i];
-			while (*(++opt) != '\0') {
-				switch (*opt) {
-				case '-': // don't processing later arguments as options
-					flags.process_options = !flags.process_options;
-					break;
-				case 'h': // print help and exit
-				default:
-					usage();
-					return 0;
-					break;
+		if (!flags.no_more_options && argv[i][0] == '-' && len > 0) {
+			if (strspn(argv[i], "-abfh") == len) {
+				// loop through options
+				char *opt = argv[i];
+				while (*(++opt) != '\0') {
+					switch (*opt) {
+					case 'a':
+						puts("a case");
+						break;
+					case 'b':
+						puts("b case");
+						break;
+					case '-': // don't processing later arguments as options
+						flags.no_more_options = 1;
+						break;
+					case 'f':
+						puts("f in the chat boys");
+						break;
+					case 'h': // print help and exit
+					default:
+						usage();
+						return 0;
+						break;
+					}
 				}
+			} else {
+				// TODO: Depending on flags, do different things with option
+				// arguments, or just regular arguments.
 			}
-		} else {
-			// TODO: Depending on flags, do different things with option
-			// arguments, or just regular arguments.
 		}
 	}
 
