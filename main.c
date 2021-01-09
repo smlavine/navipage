@@ -27,8 +27,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-/* Taken from <https://github.com/sakhmatd/rogueutil>. */
-#include "rogueutil.h"
+#include "navipage.h"
 
 /*
  * To be used as an argument to add_file().
@@ -38,29 +37,9 @@ enum {
 	RECURSE = 1,
 };
 
-/*
- * A list of files that will be read into buffers. They are not read into
- * buffers immediately because not all will be necessary.
- */
-typedef struct {
-	/* The amount of files in the list. */
-	int amt;
-	/* The amount of space allocated for the array. */
-	size_t size;
-	/* The amount of allocated space that is being used for the array. */
-	size_t used;
-	/* Pointer to the array. */
-	char **v; 
-} FileList;
-
-typedef struct {
-	unsigned int debug:1;
-	unsigned int recurse_more:1;
-} Flags;
-
+extern int start(void);
 static int add_file(const char *, int);
 static int cmpfilestring(const void *, const void *);
-static int start(void);
 static void usage(void);
 
 /* 
@@ -256,15 +235,6 @@ cmpfilestring(const void *p1, const void *p2)
 }
 
 /*
- * TODO: Load buffers, draw to screen, poll input, etc.
- */
-static int
-start(void)
-{
-	return 0;
-}
-
-/*
  * Print help about the program.
  */
 static void
@@ -280,7 +250,6 @@ main(int argc, char *argv[])
 	const char *optstring = "dhr";
 
 	argv0 = argv[0];
-	filelist.amt = 0;
 	filelist.size = 4*sizeof(char *);
 	filelist.used = 0;
 	filelist.v = malloc(filelist.size);
