@@ -19,6 +19,9 @@
 #ifndef NAVIPAGE_H
 #define NAVIPAGE_H
 
+#define outofmem(x)	fprintf(stderr, "%s: error: out of memory\n", argv0);\
+					exit((x));
+
 /*
  * A list of files that will be read into buffers. They are not read into
  * buffers immediately because not all will be necessary.

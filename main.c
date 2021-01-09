@@ -29,8 +29,6 @@
 
 #include "navipage.h"
 
-#define outofmem(x)	fprintf(stderr, "%s: error: out of memory\n", argv0);\
-					exit((x));
 /*
  * To be used as an argument to add_file().
  */
