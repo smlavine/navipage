@@ -25,54 +25,68 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "rogueutil.h" // Taken from <https://github.com/sakhmatd/rogueutil>.
+/* Taken from <https://github.com/sakhmatd/rogueutil>. */
+#include "rogueutil.h"
 
-void usage();
+/* A list of files that will be read into buffers. They are not read into
+ * buffers immediately because not all will be necessary.
+ */
+typedef struct {
+	/* The amount of files in the list. */
+	int amt;
+	/* The amount of space allocated for the array. */
+	size_t size;
+	/* The amount of allocated space that is being used for the array. */
+	size_t used;
+	/* Pointer to the array. */
+	char **v; 
+} FileList;
 
-// Name of the program, as executed. This is preserved past getopt.
-char *argv0;
-
-// A list of files to read from, and amount of files.
-struct Filelist {
-	int amt; // amount of files in the list
-	size_t size; // amount of space allocated for the array
-	size_t used; // amount of allocated space that is being used for the array
-	char **v; // pointer to the array
-} filelist;
-
-struct Flags {
+typedef struct {
 	unsigned int debug:1;
-} flags;
+} Flags;
 
+static void usage(void);
 
-void usage()
+/* 
+ * Name of the program, as it is executed by the user. This is declared here
+ * because argv[0] is going to be modiifed by getopt.
+ */
+char *argv0;
+FileList filelist;
+Flags flags;
+
+static const char *USAGE =
+"navipage - A program to view and organize Omnavi files\n"
+"Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
+"\n"
+"This program is free software: you can redistribute it and/or modify\n"
+"it under the terms of the GNU General Public License as published by\n"
+"the Free Software Foundation, either version 3 of the License, or\n"
+"(at your option) any later version.\n"
+"\n"
+"This program is distributed in the hope that it will be useful,\n"
+"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
+"GNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public License\n"
+"along with this program. If not, see http://www.gnu.org/licenses/.\n"
+"\n"
+"Usage: navipage [-h] files...\n"
+"Options:\n"
+"	-h Print this help and exit.\n"
+"	-d Enable debug output.\n"
+"For examples, see README.md or https://github.com/smlavine/navipage.\n";
+
+static void
+usage()
 {
-	puts(
-		"navipage - A program to view and organize Omnavi files\n"
-		"Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
-		"\n"
-		"This program is free software: you can redistribute it and/or modify\n"
-		"it under the terms of the GNU General Public License as published by\n"
-		"the Free Software Foundation, either version 3 of the License, or\n"
-		"(at your option) any later version.\n"
-		"\n"
-		"This program is distributed in the hope that it will be useful,\n"
-		"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-		"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
-		"GNU General Public License for more details.\n"
-		"\n"
-		"You should have received a copy of the GNU General Public License\n"
-		"along with this program. If not, see http://www.gnu.org/licenses/.\n"
-		"\n"
-		"Usage: navipage [-h] files...\n"
-		"Options:\n"
-		"	-h Print this help and exit.\n"
-		"	-d Enable debug output.\n"
-		"For examples, see README.md or https://github.com/smlavine/navipage.\n"
-	);
+	fputs(USAGE, stdout);
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	argv0 = argv[0];
 	filelist.amt = 0;
@@ -86,7 +100,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// handle options
+	/* Handle options. */
 	int ch;
 	const char *optstring = "dh";
 	while ((ch = getopt(argc, argv, optstring)) != -1) {
@@ -95,19 +109,19 @@ int main(int argc, char *argv[])
 			flags.debug = 1;
 			break;
 		case 'h':
-			usage(); // FALLTHROUGH
-		case ':':
+			usage();
+		case ':': /* FALLTHROUGH */
 		case '?':
 			exit(EXIT_FAILURE);
 			break;
 		}
 	}
 
-	// Set argc/argv to remaining arguments.
+	/* Set argc/argv to remaining arguments. */
 	argc -= optind;
 	argv += optind;
 
-	// All remaining arguments should be paths to files to be read.
+	/* All remaining arguments should be paths to files to be read. */
 	for (int i = 0; i < argc; i++) {
 		struct stat statbuf;
 		if (stat(argv[i], &statbuf) == -1) {
@@ -118,14 +132,19 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "%s: cannot read '%s': not a regular file\n",
 					argv0, argv[i]);
 		} else { 
-			// Add file to the list.
+			/* Add file path to the list. */
 
-			// Make sure there is enough space allocated in filelist for a new
-			// pointer.
+			/*
+			 * Make sure that there is enough space allocated in filelist for
+			 * a new pointer.
+			 */
 			while (filelist.size < filelist.used) {
 				filelist.size += 4*sizeof(char *);
 			}
-			// Make sure realloc is valid before reallocating the filelist.
+			/*
+			 * Make sure that realloc is valid before reallocating the
+			 * filelist.
+			 */
 			char **tmp = realloc(filelist.v, filelist.size);
 			if (tmp == NULL) {
 				fprintf(stderr, "%s: error: out of memory\n", argv0);
@@ -134,7 +153,7 @@ int main(int argc, char *argv[])
 				filelist.v = tmp;
 			}
 			
-			// Allocate space for file path.
+			/* Allocate space for file path. */
 			filelist.v[filelist.amt] = malloc((1+strlen(argv[i]))*sizeof(char));
 			if (filelist.v[filelist.amt] == NULL) {
 				fprintf(stderr, "%s: error: out of memory\n", argv0);
