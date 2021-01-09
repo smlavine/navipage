@@ -172,6 +172,9 @@ usage()
 int
 main(int argc, char *argv[])
 {
+	int c;
+	const char *optstring = "dhr";
+
 	argv0 = argv[0];
 	filelist.amt = 0;
 	filelist.size = 4*sizeof(char *);
@@ -186,10 +189,8 @@ main(int argc, char *argv[])
 	}
 
 	/* Handle options. */
-	int ch;
-	const char *optstring = "dhr";
-	while ((ch = getopt(argc, argv, optstring)) != -1) {
-		switch (ch) {
+	while ((c = getopt(argc, argv, optstring)) != -1) {
+		switch (c) {
 		case 'd':
 			flags.debug = 1;
 			break;
@@ -210,14 +211,14 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	/* All remaining arguments should be paths to files to be read. */
-	for (int i = 0; i < argc; i++) {
+	for (c = 0; i < argc; i++) {
 		add_file(argv[i], RECURSE);
 	}
 
 	if (flags.debug) {
 		printf("amt: %d\nsizeof(char *): %zu\nsize: %zu\nused: %zu\nv:\n",
 				filelist.amt, sizeof(char *), filelist.size, filelist.used);
-		for (int i = 0; i < filelist.amt; i++) {
+		for (c = 0; i < filelist.amt; i++) {
 			puts(filelist.v[i]);
 		}
 	}
