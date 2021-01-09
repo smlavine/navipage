@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <getopt.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,6 +59,8 @@ typedef struct {
 } Flags;
 
 static int add_file(const char *, int);
+static int cmpfilestring(const void *, const void *);
+static int start(void);
 static void usage(void);
 
 /* 
@@ -125,6 +128,10 @@ add_file(const char *path, int recurse)
 						argv0, path, strerror(errsv));
 				return -1;
 			} else {
+				/* We need to set errno here, because it is the only way to
+				 * to determine if readdir() errors out, or finishes
+				 * successfully.
+				 */
 				errno = 0;
 				while ((d = readdir(dirp)) != NULL) {
 					/* If we do not exclude these (the current and one-up
@@ -141,15 +148,20 @@ add_file(const char *path, int recurse)
 						malloc(strlen(path)+2+strlen(d->d_name)*sizeof(char));
 					sprintf(newpath, "%s", path);
 					if (path[strlen(path) - 1] != '/') {
-						sprintf(newpath, "/");
+						/* Add strlen(newpath) here so that the original part
+						 * of newpath -- the directory path -- is not
+						 * overwritten.
+						 */
+						sprintf(newpath+strlen(newpath), "/");
 					}
-					sprintf(newpath, "%s", d->d_name);
+					sprintf(newpath+strlen(newpath), "%s", d->d_name);
 
 					add_file(newpath,
 							flags.recurse_more ? RECURSE : NO_RECURSE);
 
 					free(newpath);
 				}
+				closedir(dirp);
 				if ((errsv = errno) != 0) {
 					fprintf(stderr, "%s: stopping readdir '%s': %s\n",
 							argv0, path, strerror(errsv));
@@ -201,10 +213,62 @@ add_file(const char *path, int recurse)
 }
 
 /*
+ * To be called by qsort. Sorts two strings, but only sorts the basename of
+ * the path.
+ */
+static int
+cmpfilestring(const void *p1, const void *p2)
+{
+	/* POSIX-compliant basename() may modify the path variable, which we don't
+	 * want. For this reason, we copy the string before passing it to
+	 * basename().
+	 */
+	char *base1, *base2, *copy1, *copy2;
+	int ret;
+	
+	/* To quote 'man 3 qsort' on the reasoning for these casts:
+	 * "The actual arguments to this function are "pointers to pointers to
+	 * char", but strcmp(3) arguments are "pointers to char", hence the
+	 * following cast plus dereference"
+	 * This also applies to strlen.
+	 */
+	copy1 = malloc((1+strlen(*(const char **)p1))*sizeof(char));
+	copy2 = malloc((1+strlen(*(const char **)p2))*sizeof(char));
+	if (copy1 == NULL || copy2 == NULL) {
+		fprintf(stderr, "%s: error: out of memory\n", argv0);
+		exit(EXIT_FAILURE);
+	}
+
+	strcpy(copy1, *(const char **)p1);
+	strcpy(copy2, *(const char **)p2);
+	base1 = basename(copy1);
+	base2 = basename(copy2);
+
+	/* Note the negation here. This will sort the list with the most recent
+	 * file at the start.
+	 */
+	ret = -strcmp(base1, base2);
+
+	free(copy1);
+	free(copy2);
+
+	return ret;
+}
+
+/*
+ * TODO: Load buffers, draw to screen, poll input, etc.
+ */
+static int
+start(void)
+{
+	return 0;
+}
+
+/*
  * Print help about the program.
  */
 static void
-usage()
+usage(void)
 {
 	fputs(USAGE, stdout);
 }
@@ -256,6 +320,11 @@ main(int argc, char *argv[])
 		add_file(argv[i], RECURSE);
 	}
 
+	/* Sort files such that the start of the list is the newest file --
+	 * assuming that they are named like YYYYMMDD[...].
+	 */
+	qsort(filelist.v, filelist.amt, sizeof(char *), cmpfilestring);
+
 	if (flags.debug) {
 		printf("amt: %d\nsizeof(char *): %zu\nsize: %zu\nused: %zu\nv:\n",
 				filelist.amt, sizeof(char *), filelist.size, filelist.used);
@@ -264,5 +333,5 @@ main(int argc, char *argv[])
 		}
 	}
 
-	return 0;
+	return start();
 }
