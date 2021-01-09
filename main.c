@@ -16,6 +16,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <dirent.h>
 #include <errno.h>
 #include <getopt.h>
 #include <stdio.h>
@@ -28,7 +29,16 @@
 /* Taken from <https://github.com/sakhmatd/rogueutil>. */
 #include "rogueutil.h"
 
-/* A list of files that will be read into buffers. They are not read into
+/*
+ * To be used as an argument to add_file().
+ */
+enum {
+	NO_RECURSE = 0,
+	RECURSE = 1,
+};
+
+/*
+ * A list of files that will be read into buffers. They are not read into
  * buffers immediately because not all will be necessary.
  */
 typedef struct {
@@ -44,8 +54,10 @@ typedef struct {
 
 typedef struct {
 	unsigned int debug:1;
+	unsigned int recurse_more:1;
 } Flags;
 
+static int add_file(const char *, int);
 static void usage(void);
 
 /* 
@@ -73,12 +85,84 @@ static const char *USAGE =
 "You should have received a copy of the GNU General Public License\n"
 "along with this program. If not, see http://www.gnu.org/licenses/.\n"
 "\n"
-"Usage: navipage [-h] files...\n"
+"Usage: navipage [-dhr] files...\n"
 "Options:\n"
-"	-h Print this help and exit.\n"
-"	-d Enable debug output.\n"
+"    -d  Enable debug output.\n"
+"    -h  Print this help and exit.\n"
+"    -r  Infinitely recurse in directories.\n"
 "For examples, see README.md or https://github.com/smlavine/navipage.\n";
 
+/*
+ * Append the given file path to filelist. If the file is a directory, and
+ * recurse is nonzero, then all files will be added to filelist by calling this
+ * function recursively -- but it will only recurse one directory level deep
+ * unless flags.recurse_more is set.
+ * Return value shall be 0 on success, and -1 on error. Upon irreconciliable
+ * errors, such as running out of memory, the program will be exitted with
+ * code EXIT_FAILURE.
+ */
+static int
+add_file(const char *path, int recurse)
+{
+	struct stat statbuf;
+	if (stat(path, &statbuf) == -1) {
+		int errsv = errno;
+		fprintf(stderr, "%s: cannot stat '%s': %s\n",
+				argv0, path, strerror(errsv));
+		return -1;
+	} else if (S_ISDIR(statbuf.st_mode)) {
+		if (recurse) {
+			/* TODO: recurse by reading files in directory. */
+		} else {
+			fprintf(stderr, "%s: -r not specified; omitting directory '%s'\n",
+					argv0, path);
+			return -1;
+		}
+
+	} else if (!S_ISREG(statbuf.st_mode)) {
+		fprintf(stderr, "%s: cannot read '%s': not a regular file\n",
+				argv0, path);
+		return -1;
+	} else { 
+		/* Add file path to the list. */
+
+		/*
+		 * Make sure that there is enough space allocated in filelist for
+		 * a new pointer.
+		 */
+		while (filelist.size < filelist.used) {
+			filelist.size += 4*sizeof(char *);
+		}
+		/*
+		 * Make sure that realloc is valid before reallocating the
+		 * filelist.
+		 */
+		char **tmp = realloc(filelist.v, filelist.size);
+		if (tmp == NULL) {
+			fprintf(stderr, "%s: error: out of memory\n", argv0);
+			exit(EXIT_FAILURE);
+		} else {
+			filelist.v = tmp;
+		}
+
+		/* Allocate space for file path. */
+		filelist.v[filelist.amt] =
+			malloc((1+strlen(path))*sizeof(char));
+		if (filelist.v[filelist.amt] == NULL) {
+			fprintf(stderr, "%s: error: out of memory\n", argv0);
+			exit(EXIT_FAILURE);
+		}
+		filelist.used += sizeof(char *);
+		strcpy(filelist.v[filelist.amt], path);
+		filelist.amt++;
+	}
+
+	return 0;
+}
+
+/*
+ * Print help about the program.
+ */
 static void
 usage()
 {
@@ -94,6 +178,7 @@ main(int argc, char *argv[])
 	filelist.used = 0;
 	filelist.v = malloc(filelist.size);
 	flags.debug = 0;
+	flags.recurse_more = 0;
 
 	if (filelist.v == NULL) {
 		fprintf(stderr, "%s: error: out of memory\n", argv0);
@@ -102,11 +187,14 @@ main(int argc, char *argv[])
 
 	/* Handle options. */
 	int ch;
-	const char *optstring = "dh";
+	const char *optstring = "dhr";
 	while ((ch = getopt(argc, argv, optstring)) != -1) {
 		switch (ch) {
 		case 'd':
 			flags.debug = 1;
+			break;
+		case 'r':
+			flags.recurse_more = 1;
 			break;
 		case 'h':
 			usage();
@@ -123,46 +211,7 @@ main(int argc, char *argv[])
 
 	/* All remaining arguments should be paths to files to be read. */
 	for (int i = 0; i < argc; i++) {
-		struct stat statbuf;
-		if (stat(argv[i], &statbuf) == -1) {
-			int errsv = errno;
-			fprintf(stderr, "%s: cannot stat '%s': %s\n",
-					argv0, argv[i], strerror(errsv));
-		} else if (!S_ISREG(statbuf.st_mode)) {
-			fprintf(stderr, "%s: cannot read '%s': not a regular file\n",
-					argv0, argv[i]);
-		} else { 
-			/* Add file path to the list. */
-
-			/*
-			 * Make sure that there is enough space allocated in filelist for
-			 * a new pointer.
-			 */
-			while (filelist.size < filelist.used) {
-				filelist.size += 4*sizeof(char *);
-			}
-			/*
-			 * Make sure that realloc is valid before reallocating the
-			 * filelist.
-			 */
-			char **tmp = realloc(filelist.v, filelist.size);
-			if (tmp == NULL) {
-				fprintf(stderr, "%s: error: out of memory\n", argv0);
-				exit(EXIT_FAILURE);
-			} else {
-				filelist.v = tmp;
-			}
-			
-			/* Allocate space for file path. */
-			filelist.v[filelist.amt] = malloc((1+strlen(argv[i]))*sizeof(char));
-			if (filelist.v[filelist.amt] == NULL) {
-				fprintf(stderr, "%s: error: out of memory\n", argv0);
-				exit(EXIT_FAILURE);
-			}
-			filelist.used += sizeof(char *);
-			strcpy(filelist.v[filelist.amt], argv[i]);
-			filelist.amt++;
-		}
+		add_file(argv[i], RECURSE);
 	}
 
 	if (flags.debug) {
