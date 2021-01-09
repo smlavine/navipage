@@ -29,6 +29,8 @@
 
 #include "navipage.h"
 
+#define outofmem(x)	fprintf(stderr, "%s: error: out of memory\n", argv0);\
+					exit((x));
 /*
  * To be used as an argument to add_file().
  */
@@ -170,8 +172,7 @@ add_file(const char *path, int recurse)
 		 */
 		char **tmp = realloc(filelist.v, filelist.size);
 		if (tmp == NULL) {
-			fprintf(stderr, "%s: error: out of memory\n", argv0);
-			exit(EXIT_FAILURE);
+			outofmem(EXIT_FAILURE);
 		} else {
 			filelist.v = tmp;
 		}
@@ -180,8 +181,7 @@ add_file(const char *path, int recurse)
 		filelist.v[filelist.amt] =
 			malloc((1+strlen(path))*sizeof(char));
 		if (filelist.v[filelist.amt] == NULL) {
-			fprintf(stderr, "%s: error: out of memory\n", argv0);
-			exit(EXIT_FAILURE);
+			outofmem(EXIT_FAILURE);
 		}
 		filelist.used += sizeof(char *);
 		strcpy(filelist.v[filelist.amt], path);
@@ -214,8 +214,7 @@ cmpfilestring(const void *p1, const void *p2)
 	copy1 = malloc((1+strlen(*(const char **)p1))*sizeof(char));
 	copy2 = malloc((1+strlen(*(const char **)p2))*sizeof(char));
 	if (copy1 == NULL || copy2 == NULL) {
-		fprintf(stderr, "%s: error: out of memory\n", argv0);
-		exit(EXIT_FAILURE);
+		outofmem(EXIT_FAILURE);
 	}
 
 	strcpy(copy1, *(const char **)p1);
@@ -257,8 +256,7 @@ main(int argc, char *argv[])
 	flags.recurse_more = 0;
 
 	if (filelist.v == NULL) {
-		fprintf(stderr, "%s: error: out of memory\n", argv0);
-		exit(EXIT_FAILURE);
+		outofmem(EXIT_FAILURE);
 	}
 
 	/* Handle options. */
