@@ -104,15 +104,57 @@ static const char *USAGE =
 static int
 add_file(const char *path, int recurse)
 {
+	int errsv;
+	struct dirent *d;
+	DIR *dirp;
+	char *newpath;
 	struct stat statbuf;
+
 	if (stat(path, &statbuf) == -1) {
-		int errsv = errno;
+		errsv = errno;
 		fprintf(stderr, "%s: cannot stat '%s': %s\n",
 				argv0, path, strerror(errsv));
 		return -1;
 	} else if (S_ISDIR(statbuf.st_mode)) {
 		if (recurse) {
-			/* TODO: recurse by reading files in directory. */
+			/* Recurse upon the directory. */
+			dirp = opendir(path);
+			if (dirp == NULL) {
+				errsv = errno;
+				fprintf(stderr, "%s: cannot opendir '%s': %s\n",
+						argv0, path, strerror(errsv));
+				return -1;
+			} else {
+				errno = 0;
+				while ((d = readdir(dirp)) != NULL) {
+					/* If we do not exclude these (the current and one-up
+					 * directories), then they will recurse unto themselves,
+					 * creating many repeats in the list.
+					 */
+					if (strcmp(d->d_name, ".") == 0 ||
+							strcmp(d->d_name, "..") == 0) {
+						continue;
+					}
+
+					/* +2 is for '/' and '\0'. */
+					newpath =
+						malloc(strlen(path)+2+strlen(d->d_name)*sizeof(char));
+					sprintf(newpath, "%s", path);
+					if (path[strlen(path) - 1] != '/') {
+						sprintf(newpath, "/");
+					}
+					sprintf(newpath, "%s", d->d_name);
+
+					add_file(newpath,
+							flags.recurse_more ? RECURSE : NO_RECURSE);
+
+					free(newpath);
+				}
+				if ((errsv = errno) != 0) {
+					fprintf(stderr, "%s: stopping readdir '%s': %s\n",
+							argv0, path, strerror(errsv));
+				}
+			}
 		} else {
 			fprintf(stderr, "%s: -r not specified; omitting directory '%s'\n",
 					argv0, path);
@@ -126,15 +168,13 @@ add_file(const char *path, int recurse)
 	} else { 
 		/* Add file path to the list. */
 
-		/*
-		 * Make sure that there is enough space allocated in filelist for
+		/* Make sure that there is enough space allocated in filelist for
 		 * a new pointer.
 		 */
 		while (filelist.size < filelist.used) {
 			filelist.size += 4*sizeof(char *);
 		}
-		/*
-		 * Make sure that realloc is valid before reallocating the
+		/* Make sure that realloc is valid before reallocating the
 		 * filelist.
 		 */
 		char **tmp = realloc(filelist.v, filelist.size);
@@ -199,7 +239,8 @@ main(int argc, char *argv[])
 			break;
 		case 'h':
 			usage();
-		case ':': /* FALLTHROUGH */
+			/* FALLTHROUGH */
+		case ':':
 		case '?':
 			exit(EXIT_FAILURE);
 			break;
