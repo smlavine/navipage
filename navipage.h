@@ -20,7 +20,9 @@
 #define NAVIPAGE_H
 
 #define outofmem(x)	fprintf(stderr, "%s: error: out of memory\n", argv0);\
-					exit((x));
+	exit((x));
+#define MAX(A, B)   ((A) > (B) ? (A) : (B))
+#define MIN(A, B)   ((A) < (B) ? (A) : (B))
 
 /*
  * A list of files that will be read into buffers. They are not read into
