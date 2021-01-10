@@ -31,10 +31,12 @@ typedef struct {
 	size_t length;
 	/* The amount of space allocated for the file. */
 	size_t size;
-	/* The line of the file that is drawn at the top of the page. Used to track
-	 * progress through scrolling the file.
-	 */
-	unsigned int line;
+	/* Pointer to the first character being shown at the top of the screen. */
+	char *top;
+	/* Pointer to the last character being shown at the bottom of the
+	 * screen. That is to say: all characters between and including top and
+	 * bottom will be shown on the screen. */
+	char *bottom;
 } Buffer;
 
 typedef struct {
@@ -46,8 +48,9 @@ typedef struct {
 	Buffer *v;
 } BufferList;
 
+static void display_buffer(Buffer *);
 static void error_buffer(Buffer *, const char *, ...);
-static int read_buffer(Buffer *, char *);
+static int init_buffer(Buffer *, char *);
 int start(void);
 
 extern char *argv0;
@@ -55,6 +58,17 @@ extern FileList filelist;
 extern Flags flags;
 
 BufferList bufl;
+
+/*
+ * Display all text between b->top and b->bottom.
+ */
+static void
+display_buffer(Buffer *b)
+{
+	cls();
+	locate(1, 1);
+	fwrite(b->top, sizeof(char), b->bottom - b->top, stdout);
+}
 
 /*
  * Fill the buffer with an error message designated by the arguments.
@@ -74,12 +88,14 @@ error_buffer(Buffer *b, const char *format, ...)
 }
 
 /*
- * Read the file at path into b. Returns 0 on success, -1 on error.
+ * Read the file at path into b, and set various values of b, like length,
+ * top, offset, etc. Returns 0 on success, -1 on error.
  */
 static int
-read_buffer(Buffer *b, char *path)
+init_buffer(Buffer *b, char *path)
 {
 	FILE *fp;
+	int rows;
 
 	/* Each condition completes a task that I need to do to read the file into
 	 * the buffer, and also checks if it succeeded. If the condition is true,
@@ -116,7 +132,17 @@ read_buffer(Buffer *b, char *path)
 	}
 	b->text[b->length] = '\0';
 
-	b->line = 0;
+	/* As mentioned in the definition fo Buffer, top and bottom define the
+	 * range of text of the file that is shown on the screen at a time.
+	 */
+	b->top = b->text;
+	b->bottom = b->top;
+	rows = trows() - 1;
+	while (rows > 0) {
+		if (*(b->bottom++) == '\n') {
+			rows--;
+		}
+	}
 
 	return 0;
 }
@@ -135,11 +161,11 @@ start(void)
 		outofmem(EXIT_FAILURE);
 	}
 
-	read_buffer(&bufl.v[0], filelist.v[0]);
+	init_buffer(&bufl.v[0], filelist.v[0]);
 
 	if (flags.debug) {
-		fprintf(stderr, "length: %zu\nsize: %zu\nline: %u\n",
-				bufl.v[0].length, bufl.v[0].size, bufl.v[0].line);
+		fprintf(stderr, "length: %zu\nsize: %zu\n",
+				bufl.v[0].length, bufl.v[0].size);
 	}
 
 	/* To save time, we will only read buffers from file when the user wants to
@@ -148,6 +174,40 @@ start(void)
 	 */
 	for (i = 1; i < bufl.amt; i++) {
 		bufl.v[i].text = NULL;
+	}
+
+	display_buffer(&bufl.v[bufl.index]);
+
+	/*
+	 * The main loop!
+	 */
+	for (;;) {
+		switch (nb_getch()) {
+		case 'j':
+			/* Scroll text down a line as long as the buffer isn't already
+			 * displaying the very bottom of the file.
+			 */
+			if (bufl.v[bufl.index].bottom !=
+					bufl.v[bufl.index].text + bufl.v[bufl.index].length) {
+				while (*(bufl.v[bufl.index].top++) != '\n' &&
+						*(bufl.v[bufl.index].bottom++) != '\n')
+					;
+				display_buffer(&bufl.v[bufl.index]);
+			}
+			break;
+		case 'k':
+			/* Scroll text up a line as long as the buffer isn't already
+			 * displaying the very top of the file.
+			 */
+			if (bufl.v[bufl.index].top != bufl.v[bufl.index].text) {
+				while (*(bufl.v[bufl.index].top++) != '\n' &&
+						*(bufl.v[bufl.index].bottom++) != '\n')
+					;
+				display_buffer(&bufl.v[bufl.index]);
+			}
+			break;
+		}
+
 	}
 
 	return 0;
