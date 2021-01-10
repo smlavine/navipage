@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <libgen.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +40,7 @@ enum {
 
 extern int start(void);
 static int add_file(const char *, int);
+void cleanup(int);
 static int cmpfilestring(const void *, const void *);
 static void usage(void);
 
@@ -190,6 +192,16 @@ add_file(const char *path, int recurse)
 }
 
 /*
+ * Cleans up terminal settings and the like before exitting the program.
+ */
+void
+cleanup(int sig)
+{
+	system("stty sane");
+	exit(sig);
+}
+
+/*
  * To be called by qsort. Sorts two strings, but only sorts the basename of
  * the path.
  */
@@ -305,9 +317,19 @@ main(int argc, char *argv[])
 				"amt: %d\nsizeof(char *): %zu\nsize: %zu\nused: %zu\nv:\n",
 				filelist.amt, sizeof(char *), filelist.size, filelist.used);
 		for (i = 0; i < filelist.amt; i++) {
-			fputs(filelist.v[i], stderr);
+			fprintf(stderr, "%s\n", filelist.v[i]);
 		}
 	}
+
+	/* Call cleanup before suddenly exitting the program.
+	 */
+	signal(SIGINT, cleanup);
+	signal(SIGSEGV, cleanup);
+
+	/* Disable showing input on the screen while the program runs. This
+	 * prevents all the 'j's and 'k's from showing on the bottom of the screen.
+	 */
+	system("stty -echo");
 
 	return start();
 }

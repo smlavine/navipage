@@ -62,6 +62,7 @@ typedef struct {
 	Buffer *v;
 } BufferList;
 
+extern void cleanup(int);
 static void display_buffer(Buffer *);
 static void error_buffer(Buffer *, const char *, ...);
 static int init_buffer(Buffer *, char *);
@@ -80,18 +81,30 @@ BufferList bufl;
 static void
 display_buffer(Buffer *b)
 {
+	int bottomline;
 	char *endoflast;
 
-	/* Point end of last to the end of the line that is 'rows' away from
+	/* Point end of last to the end of the line that is 'rows - 1' away from
 	 * b->st[b->top], or, if a newline is not, then to the end of the file.
+	 * We use 'rows - 1' instead of 'rows' so that the last row displayed in
+	 * the terminal is always empty.
 	 */
-	if ((endoflast = strchr(b->st[b->top + rows], '\n')) == NULL) {
+	if ((bottomline = b->top + rows - 1) > (int) b->stlength) {
+		bottomline = b->stlength;
+	}
+
+
+	/* TODO: fix segfault on this line when the amount of lines in the file is
+	 * less than the amount of lines in the terminal window.
+	 */
+	if ((endoflast = strchr(b->st[bottomline], '\n')) == NULL) {
 		endoflast = b->text + b->length - 1;
 	}
 
 	cls();
-	locate(1, 1);
+	gotoxy(1, 1);
 	fwrite(b->st[b->top], sizeof(char), endoflast - b->st[b->top], stdout);
+	gotoxy(1, rows);
 }
 
 /*
@@ -120,6 +133,8 @@ init_buffer(Buffer *b, char *path)
 {
 	FILE *fp;
 	size_t i;
+	/* This string is appended to the end of all buffers. */
+	const char *ENDSTR = "\n\n";
 
 	/* Each condition completes a task that I need to do to read the file into
 	 * the buffer, and also checks if it succeeded. If the condition is true,
@@ -146,7 +161,7 @@ init_buffer(Buffer *b, char *path)
 	 */
 	b->length = (size_t)ftell(fp);
 	rewind(fp);
-	b->size = b->length + 1;
+	b->size = b->length + strlen(ENDSTR) + 2;
 	if ((b->text = malloc(b->size*sizeof(char))) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
@@ -154,9 +169,11 @@ init_buffer(Buffer *b, char *path)
 		error_buffer(b, "%s: fread failed on '%s'\n", argv0, path);
 		return -1;
 	}
-	/* NUL-terminate the string. */
-	b->text[b->length] = '\0';
 
+	/* Terminate the string. */
+	b->text[b->length] = '\0';
+	strcat(b->text, ENDSTR);
+	b->length += strlen(ENDSTR);
 
 	/* Now we must find the amount of lines, and the location of all of the
 	 * starts of lines. This will be used in scrolling the screen.
@@ -189,10 +206,11 @@ init_buffer(Buffer *b, char *path)
 					outofmem(EXIT_FAILURE);
 				}
 			}
-			b->st[b->stlength - 1] = b->text + i;
+			b->st[b->stlength] = b->text + i;
 			b->stlength++;
 		}
 	}
+
 	return 0;
 }
 
@@ -206,8 +224,7 @@ start(void)
 	/* A pointer to the current buffer. */
 	Buffer *curb;
 
-	rows = 20;
-
+	rows = trows();
 	bufl.amt = filelist.amt;
 	bufl.index = 0;
 	if ((bufl.v = malloc(bufl.amt*sizeof(Buffer))) == NULL) {
@@ -238,22 +255,28 @@ start(void)
 	for (;;) {
 		switch (nb_getch()) {
 		case 'j':
-			if (curb->top + rows < curb->stlength) {
+		case '\005': /* scroll down (^E) */
+			if (curb->top + rows < curb->stlength - 1) {
 				curb->top++;
 				display_buffer(curb);
 			}
 			break;
 		case 'k':
+		case '\031': /* scroll up (^Y) */
 			if (curb->top > 0) {
 				curb->top--;
 				display_buffer(curb);
 			}
 			break;
+		case 'q':
+			cleanup(0);
+			exit(EXIT_SUCCESS);
+			break;
 		case 'r':
 			rows = trows();
 			display_buffer(curb);
+			break;
 		}
-
 	}
 
 	return 0;
