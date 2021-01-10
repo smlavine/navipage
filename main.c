@@ -291,11 +291,16 @@ main(int argc, char *argv[])
 	qsort(filelist.v, filelist.amt, sizeof(char *), cmpfilestring);
 
 	if (flags.debug) {
-		printf("amt: %d\nsizeof(char *): %zu\nsize: %zu\nused: %zu\nv:\n",
+		fprintf(stderr,
+				"amt: %d\nsizeof(char *): %zu\nsize: %zu\nused: %zu\nv:\n",
 				filelist.amt, sizeof(char *), filelist.size, filelist.used);
 		for (i = 0; i < filelist.amt; i++) {
-			puts(filelist.v[i]);
+			fputs(filelist.v[i], stderr);
 		}
+	}
+
+	if (filelist.amt == 0) {
+		usage(); /* exits the program */
 	}
 
 	return start();
