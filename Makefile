@@ -1,2 +1,18 @@
-navipage: main.c run.c rogueutil.h
-	cc --std=c99 -Wall -Wextra -pedantic -O3 -D_POSIX_C_SOURCE=200809L *c -o navipage
+include config.mk
+
+CFILES = main.c run.c
+HFILES = rogueutil.h navipage.h
+
+all: options navipage
+
+options:
+	@echo "CFLAGS      = $(CFLAGS)"
+	@echo "OPTIMFLAGS  = $(OPTIMFLAGS)"
+	@echo "DEBUGFLAGS  = $(DEBUGFLAGS)"
+
+navipage: $(CFILES) $(HFILES)
+	$(CC) -o $@ $(CFILES) $(CFLAGS) $(OPTIMFLAGS)
+
+debug: $(CFILES) $(HFILES)
+	$(CC) -o navipage-$@ $(CFILES) $(CFLAGS) $(DEBUGFLAGS)
+
