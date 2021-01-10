@@ -246,6 +246,11 @@ main(int argc, char *argv[])
 	int c, i;
 	const char *optstring = "dhr";
 
+	if (argc == 1) {
+		usage();
+		exit(EXIT_FAILURE);
+	}
+
 	argv0 = argv[0];
 	filelist.size = 4*sizeof(char *);
 	filelist.used = 0;
@@ -287,7 +292,6 @@ main(int argc, char *argv[])
 
 	/* Exit the program if there are no files to read. */
 	if (filelist.amt == 0) {
-		usage();
 		exit(EXIT_FAILURE);
 	}
 
