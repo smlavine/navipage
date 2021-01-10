@@ -285,6 +285,12 @@ main(int argc, char *argv[])
 		add_file(argv[i], RECURSE);
 	}
 
+	/* Exit the program if there are no files to read. */
+	if (filelist.amt == 0) {
+		usage();
+		exit(EXIT_FAILURE);
+	}
+
 	/* Sort files such that the start of the list is the newest file --
 	 * assuming that they are named like YYYYMMDD[...].
 	 */
@@ -297,10 +303,6 @@ main(int argc, char *argv[])
 		for (i = 0; i < filelist.amt; i++) {
 			fputs(filelist.v[i], stderr);
 		}
-	}
-
-	if (filelist.amt == 0) {
-		usage(); /* exits the program */
 	}
 
 	return start();
