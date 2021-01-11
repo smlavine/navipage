@@ -334,21 +334,22 @@ cmpfilestring(const void *p1, const void *p2)
 static void
 display_buffer(Buffer *b)
 {
-	int bottomline;
-	char *endoflast;
-	
-	if ((bottomline = b->top + rows) > (int) b->stlength) {
-		bottomline = b->stlength;
-	}
-
-	if ((endoflast = strchr(b->st[bottomline - 1], '\n')) == NULL) {
-		endoflast = b->text + b->length - 1;
-	}
+	int i;
+	char *tmp;
+	int len;
 
 	cls();
 	gotoxy(1, 1);
-	fwrite(b->st[b->top], sizeof(char), endoflast - b->st[b->top], stdout);
+	for (i = 0; i < rows; i++) {
+		if ((tmp = strchr(b->st[b->top + i], '\n')) == NULL) {
+			tmp = strchr(b->st[b->top + i], '\0');
+		}
+		len = tmp - b->st[b->top + i] + 1;
+		fwrite(b->st[b->top + i], sizeof(char), len, stdout);
+	}
 	gotoxy(1, rows);
+	printf("@%d/%d\t%s", bufl.index + 1, bufl.amt, filel.v[bufl.index]);
+	fflush(stdout);
 }
 
 /*
