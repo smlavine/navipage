@@ -345,6 +345,7 @@ display_buffer(Buffer *b)
 			tmp = strchr(b->st[b->top + i], '\0');
 		}
 		len = tmp - b->st[b->top + i] + 1;
+		printf("%3zu ", b->top + i);
 		fwrite(b->st[b->top + i], sizeof(char), len, stdout);
 	}
 	gotoxy(1, rows);
