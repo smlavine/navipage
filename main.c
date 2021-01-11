@@ -607,6 +607,17 @@ main(int argc, char *argv[])
 			curb->top = curb->stlength - 1 - rows;
 			display_buffer(curb);
 			break;
+		case 'h':
+			/* Move to the next-most-recent buffer. */
+			if (bufl.index > 0) {
+				bufl.index--;
+				curb = &bufl.v[bufl.index];
+				if (curb->text == NULL) {
+					init_buffer(curb, filel.v[bufl.index]);
+				}
+				display_buffer(curb);
+			}
+			break;
 		case 'j':
 		case '\005': /* scroll down (^E) */
 			/* Scroll down one line. */
@@ -620,6 +631,17 @@ main(int argc, char *argv[])
 			/* Scroll up one line. */
 			if (curb->top > 0) {
 				curb->top--;
+				display_buffer(curb);
+			}
+			break;
+		case 'l':
+			/* Move to the next-less-recent buffer. */
+			if (bufl.index < bufl.amt - 1) {
+				bufl.index++;
+				curb = &bufl.v[bufl.index];
+				if (curb->text == NULL) {
+					init_buffer(curb, filel.v[bufl.index]);
+				}
 				display_buffer(curb);
 			}
 			break;
