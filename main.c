@@ -312,15 +312,6 @@ main(int argc, char *argv[])
 	 */
 	qsort(filelist.v, filelist.amt, sizeof(char *), cmpfilestring);
 
-	if (flags.debug) {
-		fprintf(stderr,
-				"amt: %d\nsizeof(char *): %zu\nsize: %zu\nused: %zu\nv:\n",
-				filelist.amt, sizeof(char *), filelist.size, filelist.used);
-		for (i = 0; i < filelist.amt; i++) {
-			fprintf(stderr, "%s\n", filelist.v[i]);
-		}
-	}
-
 	/* Call cleanup before suddenly exitting the program.
 	 */
 	signal(SIGINT, cleanup);
