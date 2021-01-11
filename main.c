@@ -152,12 +152,12 @@ static const char *USAGE =
 "You should have received a copy of the GNU General Public License\n"
 "along with this program. If not, see http://www.gnu.org/licenses/.\n"
 "\n"
-"Usage: navipage [-dhr] files...\n"
+"Usage: navipage [-dhrv] files...\n"
 "Options:\n"
 "    -d  Enable debug output.\n"
 "    -h  Print this help and exit.\n"
 "    -r  Infinitely recurse in directories.\n"
-"For examples, see README.md or https://github.com/smlavine/navipage.\n";
+"    -v  Print version and exit.\n";
 
 /*
  * Append the given file path to filel. If the file is a directory, and
@@ -480,7 +480,7 @@ int
 main(int argc, char *argv[])
 {
 	int c, i;
-	const char *optstring = "dhr";
+	const char *optstring = "dhrv";
 	/* A pointer to the buffer the user is currently viewing. Corresponds to
 	 * &bufl.v[bufl.index]. Changes where it is pointing when the user changes
 	 * the file that they are viewing.
@@ -515,11 +515,17 @@ main(int argc, char *argv[])
 		case 'r':
 			flags.recurse_more = 1;
 			break;
+		case 'v':
+			printf("navipage version %s\n", VERSION);
+			exit(EXIT_SUCCESS);
+			break;
 		case 'h':
 			usage();
-			/* FALLTHROUGH */
+			exit(EXIT_SUCCESS);
+			break;
 		case ':':
 		case '?':
+			usage();
 			exit(EXIT_FAILURE);
 			break;
 		}

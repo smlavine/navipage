@@ -16,11 +16,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see http://www.gnu.org/licenses/.
-Usage: navipage [-h] files...
+
+Usage: navipage [-dhrv] files...
 Options:
-	-h Print this help and exit.
-	-d Enable debug output.
-For examples, see README.md or https://github.com/smlavine/navipage.
+    -d  Enable debug output.
+    -h  Print this help and exit.
+    -r  Infinitely recurse in directories.
+    -v  Print version and exit.
 ```
 
 # INSPIRATION
@@ -31,3 +33,21 @@ In particular, it is too cumbersome to see videos that were uploaded on
 previous days (this requires searching through past emails), and it is
 too cumbersome to save videos to watch for later.
 
+# USAGE
+
+At the moment, navipage works like a basic pager. You can use the following
+bindings:
+
+Key          | Action
+-------------|-------
+g            | Scroll to the top of the file.
+G            | Scroll to the bottom of the file.
+j, MouseDown | Scroll down one line.
+k, MouseUp   | Scroll up one line.
+q            | Quit navipage.
+r            | Redraw the buffer.
+
+# QUESTIONS, QUERIES, POSERS, CONCERNS, THINGS THAT HAUNT YOU IN THE NIGHT
+
+Cool! Make an issue on the GitHub page, or email me at
+*mail {at} smlavine {dot} com*.
