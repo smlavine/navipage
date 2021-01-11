@@ -1,7 +1,7 @@
 include config.mk
 
-CFILES = main.c run.c
-HFILES = rogueutil.h navipage.h
+CFILES = main.c
+HFILES = rogueutil.h
 
 all: options navipage
 

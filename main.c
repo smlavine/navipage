@@ -21,6 +21,7 @@
 #include <getopt.h>
 #include <libgen.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +29,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "navipage.h"
+#include "rogueutil.h"
+
+#define outofmem(x)	fprintf(stderr, "%s: error: out of memory\n", argv0);\
+	exit((x));
+#define MAX(A, B)   ((A) > (B) ? (A) : (B))
+#define MIN(A, B)   ((A) < (B) ? (A) : (B))
 
 /*
  * To be used as an argument to add_file().
@@ -38,10 +44,82 @@ enum {
 	RECURSE = 1,
 };
 
-extern int start(void);
+/*
+ * A file buffer. This contains the actual text of the file, but also
+ * pointers to the line breaks of the file, which come into use when the file
+ * is being scrolled through.
+ */
+typedef struct {
+	/* The actual text of the file. */
+	char *text;
+
+	/* The length of the file. */
+	size_t length;
+
+	/* The amount of space allocated for the file. */
+	size_t size;
+
+	/* An array of pointers to the first character of every line. This is used
+	 * in scrolling.
+	 */
+	char **st;
+
+	/* How many lines there are in the buffer. */
+	size_t stlength;
+
+	/* The amount of space allocated for st. */
+	size_t stsize;
+
+	/* The variable such that st[top] points to the start of the line that is
+	 * drawn at the top of the screen. It changes when the screen is scrolled.
+	 */
+	size_t top;
+} Buffer;
+
+/*
+ * A list of file buffers. Buffers can be switched between during the run of
+ * the program.
+ */
+typedef struct {
+	/* The amount of buffers in the list. */
+	int amt;
+
+	/* Index of the buffer that is currently open to the user. */
+	int index;
+
+	/* Pointer to the array. */
+	Buffer *v;
+} BufferList;
+
+/*
+ * A list of files that will be read into buffers. They are not read into
+ * buffers immediately because not all will be necessary.
+ */
+typedef struct {
+	/* The amount of files in the list. */
+	int amt;
+
+	/* The amount of space allocated for the array. */
+	size_t size;
+
+	/* The amount of allocated space that is being used for the array. */
+	size_t used;
+
+	/* Pointer to the array. */
+	char **v; 
+} FileList;
+
+typedef struct {
+	unsigned int debug:1;
+	unsigned int recurse_more:1;
+} Flags;
+
 static int add_file(const char *, int);
-void cleanup(int);
+static void cleanup(int);
 static int cmpfilestring(const void *, const void *);
+static void display_buffer(Buffer *);
+static void error_buffer(Buffer *, const char *, ...);
+static int init_buffer(Buffer *, char *);
 static void usage(void);
 
 /* 
@@ -49,9 +127,10 @@ static void usage(void);
  * because argv[0] is going to be modiifed by getopt.
  */
 char *argv0;
-FileList filelist;
 Flags flags;
-
+FileList filel;
+BufferList bufl;
+int rows;
 static const char *USAGE =
 "navipage - A program to view and organize Omnavi files\n"
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
@@ -77,8 +156,8 @@ static const char *USAGE =
 "For examples, see README.md or https://github.com/smlavine/navipage.\n";
 
 /*
- * Append the given file path to filelist. If the file is a directory, and
- * recurse is nonzero, then all files will be added to filelist by calling this
+ * Append the given file path to filel. If the file is a directory, and
+ * recurse is nonzero, then all files will be added to filel by calling this
  * function recursively -- but it will only recurse one directory level deep
  * unless flags.recurse_more is set.
  * Return value shall be 0 on success, and -1 on error. Upon irreconciliable
@@ -161,31 +240,31 @@ add_file(const char *path, int recurse)
 	} else { 
 		/* Add file path to the list. */
 
-		/* Make sure that there is enough space allocated in filelist for
+		/* Make sure that there is enough space allocated in filel for
 		 * a new pointer.
 		 */
-		while (filelist.size < filelist.used) {
-			filelist.size += 4*sizeof(char *);
+		while (filel.size < filel.used) {
+			filel.size += 4*sizeof(char *);
 		}
 		/* Make sure that realloc is valid before reallocating the
-		 * filelist.
+		 * filel.
 		 */
-		char **tmp = realloc(filelist.v, filelist.size);
+		char **tmp = realloc(filel.v, filel.size);
 		if (tmp == NULL) {
 			outofmem(EXIT_FAILURE);
 		} else {
-			filelist.v = tmp;
+			filel.v = tmp;
 		}
 
 		/* Allocate space for file path. */
-		filelist.v[filelist.amt] =
+		filel.v[filel.amt] =
 			malloc((1+strlen(path))*sizeof(char));
-		if (filelist.v[filelist.amt] == NULL) {
+		if (filel.v[filel.amt] == NULL) {
 			outofmem(EXIT_FAILURE);
 		}
-		filelist.used += sizeof(char *);
-		strcpy(filelist.v[filelist.amt], path);
-		filelist.amt++;
+		filel.used += sizeof(char *);
+		strcpy(filel.v[filel.amt], path);
+		filel.amt++;
 	}
 
 	return 0;
@@ -194,11 +273,13 @@ add_file(const char *path, int recurse)
 /*
  * Cleans up terminal settings and the like before exitting the program.
  */
-void
+static void
 cleanup(int sig)
 {
-	system("stty sane");
-	exit(sig);
+	if (sig == SIGINT || sig == SIGSEGV || sig == 0) {
+		system("stty sane");
+		showcursor();
+	}
 }
 
 /*
@@ -244,6 +325,140 @@ cmpfilestring(const void *p1, const void *p2)
 }
 
 /*
+ * Display all text from b->st[b->top] to the end of the screen.
+ */
+static void
+display_buffer(Buffer *b)
+{
+	int bottomline;
+	char *endoflast;
+
+	/* Point end of last to the end of the line that is 'rows - 1' away from
+	 * b->st[b->top], or, if a newline is not, then to the end of the file.
+	 * We use 'rows - 1' instead of 'rows' so that the last row displayed in
+	 * the terminal is always empty.
+	 */
+	if ((bottomline = b->top + rows - 1) > (int) b->stlength) {
+		bottomline = b->stlength;
+	}
+
+	if ((endoflast = strchr(b->st[bottomline - 1], '\n')) == NULL) {
+		endoflast = b->text + b->length - 1;
+	}
+
+	cls();
+	gotoxy(1, 1);
+	fwrite(b->st[b->top], sizeof(char), endoflast - b->st[b->top], stdout);
+	gotoxy(1, rows);
+}
+
+/*
+ * Fill the buffer with an error message designated by the arguments.
+ */
+static void
+error_buffer(Buffer *b, const char *format, ...)
+{
+	va_list ap;
+	b->size = 128;
+	if ((b->text = malloc(b->size*sizeof(char))) == NULL) {
+		outofmem(EXIT_FAILURE);
+	}
+	va_start(ap, format);
+	vsnprintf(b->text, b->size, format, ap);
+	va_end(ap);
+	b->length = strlen(b->text);
+}
+
+/*
+ * Read the file at path into b, and set various values of b, like length,
+ * top, offset, etc. Returns 0 on success, -1 on error.
+ */
+static int
+init_buffer(Buffer *b, char *path)
+{
+	FILE *fp;
+	size_t i;
+	/* This string is appended to the end of all buffers. */
+	const char *ENDSTR = "\n\n";
+
+	/* Each condition completes a task that I need to do to read the file into
+	 * the buffer, and also checks if it succeeded. If the condition is true,
+	 * then the function failed, and the error is handled accordingly.
+	 */
+	if ((fp = fopen(path, "r")) == NULL) {
+		error_buffer(b, "%s: cannot fopen '%s': %s\n",
+				argv0, path, strerror(errno));
+		return -1;
+	} else if (fseek(fp, 0L, SEEK_END) == -1) {
+		error_buffer(b, "%s: cannot fseek '%s': %s\n",
+				argv0, path, strerror(errno));
+		return -1;
+	} else if (ftell(fp) == -1) {
+		error_buffer(b, "%s: cannot ftell '%s': %s\n",
+				argv0, path, strerror(errno));
+		return -1;
+	}
+
+	/* b->length must be assigned here because it is of type size_t, which is
+	 * unsigned, and therefore cannot be -1. Because of this, -1 cannot be
+	 * checked for to detect an error. Therefore it is assigned here, once
+	 * we are sure there is not an error with ftell().
+	 */
+	b->length = (size_t)ftell(fp);
+	rewind(fp);
+	b->size = b->length + strlen(ENDSTR) + 2;
+	if ((b->text = malloc(b->size*sizeof(char))) == NULL) {
+		outofmem(EXIT_FAILURE);
+	}
+	if (fread(b->text, sizeof(char), b->length, fp) != b->length) {
+		error_buffer(b, "%s: fread failed on '%s'\n", argv0, path);
+		return -1;
+	}
+
+	/* Terminate the string. */
+	b->text[b->length] = '\0';
+	strcat(b->text, ENDSTR);
+	b->length += strlen(ENDSTR);
+
+	/* Now we must find the amount of lines, and the location of all of the
+	 * starts of lines. This will be used in scrolling the screen.
+	 */
+
+	b->top = 0;
+	/* Get this edge case out of the way first. */
+	if (b->length == 0) {
+		b->stlength = 0;
+		return 0;
+	}
+
+	/* We will incrememnt memory in blocks of 10. That is, every time we
+	 * reallocate memory because there is not enough room, we will add enough
+	 * memory to fit ten more char pointers.
+	 */
+	if ((b->st = malloc((b->stsize = 10)*sizeof(char *))) == NULL) {
+		outofmem(EXIT_FAILURE);
+	}
+	/* The first line starts at the first character of the text, so we start
+	 * there.
+	 */
+	b->st[0] = b->text;
+	b->stlength = 1;
+	for (i = 1; i < b->length; i++) {
+		if (b->text[i - 1] == '\n') {
+			if (b->stlength >= b->stsize) {
+				b->st = realloc(b->st, (b->stsize += 10)*sizeof(char *));
+				if (b->st == NULL) {
+					outofmem(EXIT_FAILURE);
+				}
+			}
+			b->st[b->stlength] = b->text + i;
+			b->stlength++;
+		}
+	}
+	return 0;
+}
+
+/*
  * Print help about the program.
  */
 static void
@@ -257,22 +472,30 @@ main(int argc, char *argv[])
 {
 	int c, i;
 	const char *optstring = "dhr";
+	/* A pointer to the buffer the user is currently viewing. Corresponds to
+	 * &bufl.v[bufl.index]. Changes where it is pointing when the user changes
+	 * the file that they are viewing.
+	 */
+	Buffer *curb;
 
 	if (argc == 1) {
 		usage();
 		exit(EXIT_FAILURE);
 	}
 
-	argv0 = argv[0];
-	filelist.size = 4*sizeof(char *);
-	filelist.used = 0;
-	filelist.v = malloc(filelist.size);
-	flags.debug = 0;
-	flags.recurse_more = 0;
+	/* Call cleanup before suddenly exiting the program. */
+	signal(SIGINT, cleanup);
+	signal(SIGSEGV, cleanup);
 
-	if (filelist.v == NULL) {
+	argv0 = argv[0];
+	filel.size = 4*sizeof(char *);
+	filel.used = 0;
+	if ((filel.v = malloc(filel.size)) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
+	rows = trows();
+	flags.debug = 0;
+	flags.recurse_more = 0;
 
 	/* Handle options. */
 	while ((c = getopt(argc, argv, optstring)) != -1) {
@@ -303,24 +526,86 @@ main(int argc, char *argv[])
 	}
 
 	/* Exit the program if there are no files to read. */
-	if (filelist.amt == 0) {
+	if (filel.amt == 0) {
 		exit(EXIT_FAILURE);
 	}
 
 	/* Sort files such that the start of the list is the newest file --
 	 * assuming that they are named like YYYYMMDD[...].
 	 */
-	qsort(filelist.v, filelist.amt, sizeof(char *), cmpfilestring);
+	qsort(filel.v, filel.amt, sizeof(char *), cmpfilestring);
 
-	/* Call cleanup before suddenly exitting the program.
+	/*
+	 * Now we can begin working with buffers.
 	 */
-	signal(SIGINT, cleanup);
-	signal(SIGSEGV, cleanup);
+	bufl.amt = filel.amt;
+	bufl.index = 0;
+	if ((bufl.v = malloc(bufl.amt*sizeof(Buffer))) == NULL) {
+		outofmem(EXIT_FAILURE);
+	}
+
+	curb = &bufl.v[bufl.index];
+
+	init_buffer(curb, filel.v[0]);
+
+	/* To save time, we will only initialize buffers from file when the user
+	 * wants to view them. Before then, we will initialize all but the first of
+	 * the texts to NULL so that we can tell in the future whether or not we
+	 * have already initialized them or not.
+	 */
+	for (i = 1; i < bufl.amt; i++) {
+		bufl.v[i].text = NULL;
+	}
+
+	/*
+	 * Before we start displaying files to the user and reading input, some
+	 * housekeeping.
+	 */
 
 	/* Disable showing input on the screen while the program runs. This
 	 * prevents all the 'j's and 'k's from showing on the bottom of the screen.
 	 */
 	system("stty -echo");
+	/*
+	 * Hide the cursor. It takes up a space, and can be seen moving when
+	 * printing the file, which is undesirable.
+	 */
+	hidecursor();
 
-	return start();
+	/*
+	 * Showtime.
+	 */
+	display_buffer(curb);
+
+	/*
+	 * The main input loop!
+	 */
+	for (;;) {
+		switch (nb_getch()) {
+		case 'j':
+		case '\005': /* scroll down (^E) */
+			if (curb->top + rows < curb->stlength - 1) {
+				curb->top++;
+				display_buffer(curb);
+			}
+			break;
+		case 'k':
+		case '\031': /* scroll up (^Y) */
+			if (curb->top > 0) {
+				curb->top--;
+				display_buffer(curb);
+			}
+			break;
+		case 'q':
+			cleanup(0);
+			exit(EXIT_SUCCESS);
+			break;
+		case 'r':
+			rows = trows();
+			display_buffer(curb);
+			break;
+		}
+	}
+
+	return 0;
 }
