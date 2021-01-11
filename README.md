@@ -38,14 +38,14 @@ too cumbersome to save videos to watch for later.
 At the moment, navipage works like a basic pager. You can use the following
 bindings:
 
-Key          | Action
--------------|-------
-g            | Scroll to the top of the file.
-G            | Scroll to the bottom of the file.
-j, MouseDown | Scroll down one line.
-k, MouseUp   | Scroll up one line.
-q            | Quit navipage.
-r            | Redraw the buffer.
+Key           | Action
+--------------|-------
+g             | Scroll to the top of the file.
+G             | Scroll to the bottom of the file.
+j / MouseDown | Scroll down one line.
+k / MouseUp   | Scroll up one line.
+q             | Quit navipage.
+r             | Redraw the buffer.
 
 # QUESTIONS, QUERIES, POSERS, CONCERNS, THINGS THAT HAUNT YOU IN THE NIGHT
 
