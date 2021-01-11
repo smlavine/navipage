@@ -582,8 +582,19 @@ main(int argc, char *argv[])
 	 */
 	for (;;) {
 		switch (nb_getch()) {
+		case 'g':
+			/* Automatically scroll to the top of the page. */
+			curb->top = 0;
+			display_buffer(curb);
+			break;
+		case 'G':
+			/* Automatically scroll to the bottom of the page. */
+			curb->top = curb->stlength - 1 - rows;
+			display_buffer(curb);
+			break;
 		case 'j':
 		case '\005': /* scroll down (^E) */
+			/* Scroll down one line. */
 			if (curb->top + rows < curb->stlength - 1) {
 				curb->top++;
 				display_buffer(curb);
@@ -591,16 +602,19 @@ main(int argc, char *argv[])
 			break;
 		case 'k':
 		case '\031': /* scroll up (^Y) */
+			/* Scroll up one line. */
 			if (curb->top > 0) {
 				curb->top--;
 				display_buffer(curb);
 			}
 			break;
 		case 'q':
+			/* Quit navipage. */
 			cleanup(0);
 			exit(EXIT_SUCCESS);
 			break;
 		case 'r':
+			/* Redraw the buffer. */
 			rows = trows();
 			display_buffer(curb);
 			break;
