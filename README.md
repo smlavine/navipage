@@ -42,8 +42,10 @@ Key           | Action
 --------------|-------
 g             | Scroll to the top of the file.
 G             | Scroll to the bottom of the file.
+h             | Move one buffer to the left.
 j / MouseDown | Scroll down one line.
 k / MouseUp   | Scroll up one line.
+l             | Move one buffer to the right.
 q             | Quit navipage.
 r             | Redraw the buffer.
 
