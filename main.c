@@ -165,7 +165,7 @@ static const char *USAGE =
  * function recursively -- but it will only recurse one directory level deep
  * unless flags.recurse_more is set.
  * Return value shall be 0 on success, and -1 on error. Upon irreconciliable
- * errors, such as running out of memory, the program will be exitted with
+ * errors, such as running out of memory, the program will be exit with the
  * code EXIT_FAILURE.
  */
 static int
