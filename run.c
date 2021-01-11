@@ -93,11 +93,7 @@ display_buffer(Buffer *b)
 		bottomline = b->stlength;
 	}
 
-
-	/* TODO: fix segfault on this line when the amount of lines in the file is
-	 * less than the amount of lines in the terminal window.
-	 */
-	if ((endoflast = strchr(b->st[bottomline], '\n')) == NULL) {
+	if ((endoflast = strchr(b->st[bottomline - 1], '\n')) == NULL) {
 		endoflast = b->text + b->length - 1;
 	}
 
