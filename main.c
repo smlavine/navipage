@@ -114,12 +114,16 @@ typedef struct {
 	unsigned int recurse_more:1;
 } Flags;
 
+/*
+ * Function prototypes.
+ */
 static int add_file(const char *, int);
 static void cleanup(int);
 static int cmpfilestring(const void *, const void *);
 static void display_buffer(Buffer *);
 static void error_buffer(Buffer *, const char *, ...);
 static int init_buffer(Buffer *, char *);
+static void update_rows(void);
 static void usage(void);
 
 /* 
@@ -332,13 +336,8 @@ display_buffer(Buffer *b)
 {
 	int bottomline;
 	char *endoflast;
-
-	/* Point end of last to the end of the line that is 'rows - 1' away from
-	 * b->st[b->top], or, if a newline is not, then to the end of the file.
-	 * We use 'rows - 1' instead of 'rows' so that the last row displayed in
-	 * the terminal is always empty.
-	 */
-	if ((bottomline = b->top + rows - 1) > (int) b->stlength) {
+	
+	if ((bottomline = b->top + rows) > (int) b->stlength) {
 		bottomline = b->stlength;
 	}
 
@@ -459,6 +458,16 @@ init_buffer(Buffer *b, char *path)
 }
 
 /*
+ * Update the 'rows' global variable, usually involving the rogueutil function
+ * trows().
+ */
+static void
+update_rows(void)
+{
+	rows = trows();
+}
+
+/*
  * Print help about the program.
  */
 static void
@@ -493,7 +502,7 @@ main(int argc, char *argv[])
 	if ((filel.v = malloc(filel.size)) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
-	rows = trows();
+	update_rows();
 	flags.debug = 0;
 	flags.recurse_more = 0;
 
@@ -615,7 +624,7 @@ main(int argc, char *argv[])
 			break;
 		case 'r':
 			/* Redraw the buffer. */
-			rows = trows();
+			update_rows();
 			display_buffer(curb);
 			break;
 		}
