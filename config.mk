@@ -3,7 +3,7 @@ VERSION = 0.3
 
 # paths
 PREFIX = /usr
-#MANPREFIX = $(PREFIX)/share/man
+MANPREFIX = $(PREFIX)/share/man
 
 #includes and libs
 INCS = -I. -I/usr/include
