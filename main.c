@@ -281,9 +281,19 @@ add_file(const char *path, int recurse)
 static void
 cleanup(int sig)
 {
-	if (sig == SIGINT || sig == SIGSEGV || sig == 0) {
+	switch (sig) {
+	case 0: /* Used when I want to cleanup without raising a signal. */
+	case SIGINT:
+	case SIGTERM:
+	case SIGQUIT:
+	case SIGSEGV:
+	case SIGHUP:
 		system("stty sane");
 		showcursor();
+		/* Print a blank line to return shell prompt to the beginning of the
+		 * next line.
+		 */
+		puts("");
 	}
 }
 
@@ -492,7 +502,10 @@ main(int argc, char *argv[])
 
 	/* Call cleanup before suddenly exiting the program. */
 	signal(SIGINT, cleanup);
+	signal(SIGTERM, cleanup);
+	signal(SIGQUIT, cleanup);
 	signal(SIGSEGV, cleanup);
+	signal(SIGHUP, cleanup);
 
 	argv0 = argv[0];
 	filel.size = 4*sizeof(char *);
