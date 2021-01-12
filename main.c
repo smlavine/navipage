@@ -126,8 +126,9 @@ static int init_buffer(Buffer *, char *);
 static void update_rows(void);
 static void usage(void);
 
-/* 
- * Name of the program, as it is executed by the user. This is declared here
+
+extern char **environ;
+/* Name of the program, as it is executed by the user. This is declared here
  * because argv[0] is going to be modiifed by getopt.
  */
 char *argv0;
@@ -483,11 +484,6 @@ main(int argc, char *argv[])
 {
 	int c, i;
 	const char *optstring = "dhrv";
-	/* A pointer to the buffer the user is currently viewing. Corresponds to
-	 * &bufl.v[bufl.index]. Changes where it is pointing when the user changes
-	 * the file that they are viewing.
-	 */
-	Buffer *curb;
 
 	if (argc == 1) {
 		usage();
@@ -561,9 +557,7 @@ main(int argc, char *argv[])
 		outofmem(EXIT_FAILURE);
 	}
 
-	curb = &bufl.v[bufl.index];
-
-	init_buffer(curb, filel.v[0]);
+	init_buffer(&bufl.v[bufl.index], filel.v[0]);
 
 	/* To save time, we will only initialize buffers from file when the user
 	 * wants to view them. Before then, we will initialize all but the first of
@@ -592,7 +586,7 @@ main(int argc, char *argv[])
 	/*
 	 * Showtime.
 	 */
-	display_buffer(curb);
+	display_buffer(&bufl.v[bufl.index]);
 
 	/*
 	 * The main input loop!
@@ -601,50 +595,48 @@ main(int argc, char *argv[])
 		switch (nb_getch()) {
 		case 'g':
 			/* Automatically scroll to the top of the page. */
-			curb->top = 0;
-			display_buffer(curb);
+			bufl.v[bufl.index].top = 0;
+			display_buffer(&bufl.v[bufl.index]);
 			break;
 		case 'G':
 			/* Automatically scroll to the bottom of the page. */
-			curb->top = curb->stlength - 1 - rows;
-			display_buffer(curb);
+			bufl.v[bufl.index].top = bufl.v[bufl.index].stlength - 1 - rows;
+			display_buffer(&bufl.v[bufl.index]);
 			break;
 		case 'h':
 			/* Move to the next-most-recent buffer. */
 			if (bufl.index > 0) {
 				bufl.index--;
-				curb = &bufl.v[bufl.index];
-				if (curb->text == NULL) {
-					init_buffer(curb, filel.v[bufl.index]);
+				if (bufl.v[bufl.index].text == NULL) {
+					init_buffer(&bufl.v[bufl.index], filel.v[bufl.index]);
 				}
-				display_buffer(curb);
+				display_buffer(&bufl.v[bufl.index]);
 			}
 			break;
 		case 'j':
 		case '\005': /* scroll down (^E) */
 			/* Scroll down one line. */
-			if (curb->top + rows < curb->stlength - 1) {
-				curb->top++;
-				display_buffer(curb);
+			if (bufl.v[bufl.index].top + rows < bufl.v[bufl.index].stlength - 1) {
+				bufl.v[bufl.index].top++;
+				display_buffer(&bufl.v[bufl.index]);
 			}
 			break;
 		case 'k':
 		case '\031': /* scroll up (^Y) */
 			/* Scroll up one line. */
-			if (curb->top > 0) {
-				curb->top--;
-				display_buffer(curb);
+			if (bufl.v[bufl.index].top > 0) {
+				bufl.v[bufl.index].top--;
+				display_buffer(&bufl.v[bufl.index]);
 			}
 			break;
 		case 'l':
 			/* Move to the next-less-recent buffer. */
 			if (bufl.index < bufl.amt - 1) {
 				bufl.index++;
-				curb = &bufl.v[bufl.index];
-				if (curb->text == NULL) {
-					init_buffer(curb, filel.v[bufl.index]);
+				if (bufl.v[bufl.index].text == NULL) {
+					init_buffer(&bufl.v[bufl.index], filel.v[bufl.index]);
 				}
-				display_buffer(curb);
+				display_buffer(&bufl.v[bufl.index]);
 			}
 			break;
 		case 'q':
@@ -655,7 +647,7 @@ main(int argc, char *argv[])
 		case 'r':
 			/* Redraw the buffer. */
 			update_rows();
-			display_buffer(curb);
+			display_buffer(&bufl.v[bufl.index]);
 			break;
 		}
 	}
