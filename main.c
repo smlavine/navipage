@@ -512,15 +512,15 @@ main(int argc, char *argv[])
 		case 'd':
 			flags.debug = 1;
 			break;
+		case 'h':
+			usage();
+			exit(EXIT_SUCCESS);
+			break;
 		case 'r':
 			flags.recurse_more = 1;
 			break;
 		case 'v':
 			printf("navipage version %s\n", VERSION);
-			exit(EXIT_SUCCESS);
-			break;
-		case 'h':
-			usage();
 			exit(EXIT_SUCCESS);
 			break;
 		case ':':
