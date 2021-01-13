@@ -349,7 +349,7 @@ display_buffer(Buffer *b)
 	}
 	gotoxy(1, rows);
 	printf("#%d/%d  %s  %s",
-			bufl.n + 1, bufl.amt, filel.v[bufl.n], "Press '?' for help.");
+			bufl.n + 1, bufl.amt, filel.v[bufl.n], "Press 'i' for help.");
 	fflush(stdout);
 }
 
@@ -615,6 +615,21 @@ main(int argc, char *argv[])
 				display_buffer(&bufl.v[bufl.n]);
 			}
 			break;
+		case 'i':
+			/* Find some helpful information. */
+			helpret = system("man navipage");
+			if (helpret != 0) {
+				helpret = system("less README.md");
+			}
+			if (helpret != 0) {
+				gotoxy(1, rows);
+				setColor(YELLOW);
+				fputs("See <https://github.com/smlavine/navipage> for help.",
+						stdout);
+				resetColor();
+				fflush(stdout);
+			}
+			break;
 		case 'j':
 		case '\005': /* scroll down (^E) */
 			/* Scroll down one line. */
@@ -650,21 +665,6 @@ main(int argc, char *argv[])
 			/* Redraw the buffer. */
 			update_rows();
 			display_buffer(&bufl.v[bufl.n]);
-			break;
-		case '?':
-			/* Find some helpful information. */
-			helpret = system("man navipage");
-			if (helpret != 1) {
-				helpret = system("less README.md");
-			}
-			if (helpret != 1) {
-				gotoxy(1, rows);
-				setColor(YELLOW);
-				fputs("See <https://github.com/smlavine/navipage> for help.",
-						stdout);
-				resetColor();
-				fflush(stdout);
-			}
 			break;
 		}
 	}
