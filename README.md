@@ -1,7 +1,7 @@
 # NAVIPAGE
 
 ```
-navipage - A program to view and organize Omnavi files
+navipage - multi-file pager for watching YouTube videos
 Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>
 
 This program is free software: you can redistribute it and/or modify
@@ -27,11 +27,12 @@ Options:
 
 # INSPIRATION
 
-My original plan with Omnavi was to receive an email every morning with my
-YouTube subscriptions. This works reasonably well, however it is not perfect.
-In particular, it is too cumbersome to see videos that were uploaded on
-previous days (this requires searching through past emails), and it is
-too cumbersome to save videos to watch for later.
+My original plan with [Omnavi](https://github.com/smlavine/omnavi) was to
+receive an email every morning with my YouTube subscriptions. This works
+reasonably well, however it is not perfect.  In particular, it is too
+cumbersome to see videos that were uploaded on previous days (this requires
+searching through past emails), and it is too cumbersome to save videos to
+watch for later.
 
 # USAGE
 

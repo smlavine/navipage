@@ -1,5 +1,5 @@
 /*
- * navipage - A program to view and organize Omnavi files
+ * navipage - multi-file pager for watching YouTube videos
  * Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -137,7 +137,7 @@ FileList filel;
 BufferList bufl;
 int rows;
 static const char *USAGE =
-"navipage - A program to view and organize Omnavi files\n"
+"navipage - multi-file pager for watching YouTube videos\n"
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "\n"
 "This program is free software: you can redistribute it and/or modify\n"
