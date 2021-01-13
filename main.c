@@ -85,7 +85,7 @@ typedef struct {
 	int amt;
 
 	/* Index of the buffer that is currently open to the user. */
-	int index;
+	int n;
 
 	/* Pointer to the array. */
 	Buffer *v;
@@ -360,7 +360,7 @@ display_buffer(Buffer *b)
 		fwrite(b->st[b->top + i], sizeof(char), len, stdout);
 	}
 	gotoxy(1, rows);
-	printf("@%d/%d\t%s", bufl.index + 1, bufl.amt, filel.v[bufl.index]);
+	printf("@%d/%d\t%s", bufl.n + 1, bufl.amt, filel.v[bufl.n]);
 	fflush(stdout);
 }
 
@@ -565,12 +565,12 @@ main(int argc, char *argv[])
 	 * Now we can begin working with buffers.
 	 */
 	bufl.amt = filel.amt;
-	bufl.index = 0;
+	bufl.n = 0;
 	if ((bufl.v = malloc(bufl.amt*sizeof(Buffer))) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
 
-	init_buffer(&bufl.v[bufl.index], filel.v[0]);
+	init_buffer(&bufl.v[bufl.n], filel.v[0]);
 
 	/* To save time, we will only initialize buffers from file when the user
 	 * wants to view them. Before then, we will initialize all but the first of
@@ -599,7 +599,7 @@ main(int argc, char *argv[])
 	/*
 	 * Showtime.
 	 */
-	display_buffer(&bufl.v[bufl.index]);
+	display_buffer(&bufl.v[bufl.n]);
 
 	/*
 	 * The main input loop!
@@ -608,48 +608,48 @@ main(int argc, char *argv[])
 		switch (nb_getch()) {
 		case 'g':
 			/* Automatically scroll to the top of the page. */
-			bufl.v[bufl.index].top = 0;
-			display_buffer(&bufl.v[bufl.index]);
+			bufl.v[bufl.n].top = 0;
+			display_buffer(&bufl.v[bufl.n]);
 			break;
 		case 'G':
 			/* Automatically scroll to the bottom of the page. */
-			bufl.v[bufl.index].top = bufl.v[bufl.index].stlength - 1 - rows;
-			display_buffer(&bufl.v[bufl.index]);
+			bufl.v[bufl.n].top = bufl.v[bufl.n].stlength - 1 - rows;
+			display_buffer(&bufl.v[bufl.n]);
 			break;
 		case 'h':
 			/* Move to the next-most-recent buffer. */
-			if (bufl.index > 0) {
-				bufl.index--;
-				if (bufl.v[bufl.index].text == NULL) {
-					init_buffer(&bufl.v[bufl.index], filel.v[bufl.index]);
+			if (bufl.n > 0) {
+				bufl.n--;
+				if (bufl.v[bufl.n].text == NULL) {
+					init_buffer(&bufl.v[bufl.n], filel.v[bufl.n]);
 				}
-				display_buffer(&bufl.v[bufl.index]);
+				display_buffer(&bufl.v[bufl.n]);
 			}
 			break;
 		case 'j':
 		case '\005': /* scroll down (^E) */
 			/* Scroll down one line. */
-			if (bufl.v[bufl.index].top + rows < bufl.v[bufl.index].stlength - 1) {
-				bufl.v[bufl.index].top++;
-				display_buffer(&bufl.v[bufl.index]);
+			if (bufl.v[bufl.n].top + rows < bufl.v[bufl.n].stlength - 1) {
+				bufl.v[bufl.n].top++;
+				display_buffer(&bufl.v[bufl.n]);
 			}
 			break;
 		case 'k':
 		case '\031': /* scroll up (^Y) */
 			/* Scroll up one line. */
-			if (bufl.v[bufl.index].top > 0) {
-				bufl.v[bufl.index].top--;
-				display_buffer(&bufl.v[bufl.index]);
+			if (bufl.v[bufl.n].top > 0) {
+				bufl.v[bufl.n].top--;
+				display_buffer(&bufl.v[bufl.n]);
 			}
 			break;
 		case 'l':
 			/* Move to the next-less-recent buffer. */
-			if (bufl.index < bufl.amt - 1) {
-				bufl.index++;
-				if (bufl.v[bufl.index].text == NULL) {
-					init_buffer(&bufl.v[bufl.index], filel.v[bufl.index]);
+			if (bufl.n < bufl.amt - 1) {
+				bufl.n++;
+				if (bufl.v[bufl.n].text == NULL) {
+					init_buffer(&bufl.v[bufl.n], filel.v[bufl.n]);
 				}
-				display_buffer(&bufl.v[bufl.index]);
+				display_buffer(&bufl.v[bufl.n]);
 			}
 			break;
 		case 'q':
@@ -660,7 +660,7 @@ main(int argc, char *argv[])
 		case 'r':
 			/* Redraw the buffer. */
 			update_rows();
-			display_buffer(&bufl.v[bufl.index]);
+			display_buffer(&bufl.v[bufl.n]);
 			break;
 		}
 	}
