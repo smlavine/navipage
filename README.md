@@ -69,17 +69,18 @@ along with navipage. If not, see <https://www.gnu.org/licenses/>.
 # LIBRARIES
 
 **navipage** makes use of the following libraries:
--- [rogueutil](https://github.com/sakhmatd/rogueutil)
+- [rogueutil](https://github.com/sakhmatd/rogueutil)
 
 # QUESTIONS, QUERIES, POSERS, CONCERNS, THINGS THAT HAUNT YOU IN THE NIGHT
 
 To contact me regarding **navipage**, [make an issue on the GitHub page](https://github.com/smlavine/navipage/issues).
+
 Alternatively, email me directly at *mail@smlavine.com*.
 
 # SEE ALSO
 
 For more information on **navipage**, see
-[](https://github.com/smlavine/navipage).
+<https://github.com/smlavine/navipage>.
 
 For information on the companion project **omnavi**, see
-[](https://github.com/smlavine/omnavi).
+<https://github.com/smlavine/omnavi>.
