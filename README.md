@@ -32,7 +32,8 @@ receive an email every morning with my YouTube subscriptions. This works
 reasonably well, however it is not perfect.  In particular, it is too
 cumbersome to see videos that were uploaded on previous days (this requires
 searching through past emails), and it is too cumbersome to save videos to
-watch for later.
+watch for later. Navipage makes it easier to search for particular creators
+or videos, and quickly look through multiple days worth of videos.
 
 # USAGE
 
