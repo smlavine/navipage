@@ -49,6 +49,7 @@ k / MouseUp   | Scroll up one line.
 l             | Move one buffer to the right.
 q             | Quit navipage.
 r             | Redraw the buffer.
+?             | Display help information (through 'man navipage')
 
 # QUESTIONS, QUERIES, POSERS, CONCERNS, THINGS THAT HAUNT YOU IN THE NIGHT
 

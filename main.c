@@ -348,7 +348,8 @@ display_buffer(Buffer *b)
 		fwrite(b->st[b->top + i], sizeof(char), len, stdout);
 	}
 	gotoxy(1, rows);
-	printf("@%d/%d\t%s", bufl.n + 1, bufl.amt, filel.v[bufl.n]);
+	printf("#%d/%d  %s  %s",
+			bufl.n + 1, bufl.amt, filel.v[bufl.n], "Press '?' for help.");
 	fflush(stdout);
 }
 
@@ -480,7 +481,7 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	int c, i;
+	int helpret, c, i;
 	const char *optstring = "dhrv";
 
 	if (argc == 1) {
@@ -649,6 +650,21 @@ main(int argc, char *argv[])
 			/* Redraw the buffer. */
 			update_rows();
 			display_buffer(&bufl.v[bufl.n]);
+			break;
+		case '?':
+			/* Find some helpful information. */
+			helpret = system("man navipage");
+			if (helpret != 1) {
+				helpret = system("less README.md");
+			}
+			if (helpret != 1) {
+				gotoxy(1, rows);
+				setColor(YELLOW);
+				fputs("See <https://github.com/smlavine/navipage> for help.",
+						stdout);
+				resetColor();
+				fflush(stdout);
+			}
 			break;
 		}
 	}
