@@ -65,10 +65,10 @@ typedef struct {
 	char **st;
 
 	/* How many lines there are in the buffer. */
-	size_t stlength;
+	size_t st_amt;
 
 	/* The amount of space allocated for st. */
-	size_t stsize;
+	size_t st_size;
 
 	/* The variable such that st[top] points to the start of the line that is
 	 * drawn at the top of the screen. It changes when the screen is scrolled.
@@ -428,7 +428,7 @@ init_buffer(Buffer *b, char *path)
 	b->top = 0;
 	/* Get this edge case out of the way first. */
 	if (b->length == 0) {
-		b->stlength = 0;
+		b->st_amt = 0;
 		return 0;
 	}
 
@@ -436,24 +436,24 @@ init_buffer(Buffer *b, char *path)
 	 * reallocate memory because there is not enough room, we will add enough
 	 * memory to fit ten more char pointers.
 	 */
-	if ((b->st = malloc((b->stsize = 10)*sizeof(char *))) == NULL) {
+	if ((b->st = malloc((b->st_size = 10)*sizeof(char *))) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
 	/* The first line starts at the first character of the text, so we start
 	 * there.
 	 */
 	b->st[0] = b->text;
-	b->stlength = 1;
+	b->st_amt = 1;
 	for (i = 1; i < b->length; i++) {
 		if (b->text[i - 1] == '\n') {
-			if (b->stlength >= b->stsize) {
-				b->st = realloc(b->st, (b->stsize += 10)*sizeof(char *));
+			if (b->st_amt >= b->st_size) {
+				b->st = realloc(b->st, (b->st_size += 10)*sizeof(char *));
 				if (b->st == NULL) {
 					outofmem(EXIT_FAILURE);
 				}
 			}
-			b->st[b->stlength] = b->text + i;
-			b->stlength++;
+			b->st[b->st_amt] = b->text + i;
+			b->st_amt++;
 		}
 	}
 	return 0;
@@ -602,7 +602,7 @@ main(int argc, char *argv[])
 			break;
 		case 'G':
 			/* Automatically scroll to the bottom of the page. */
-			bufl.v[bufl.n].top = bufl.v[bufl.n].stlength - 1 - rows;
+			bufl.v[bufl.n].top = bufl.v[bufl.n].st_amt - 1 - rows;
 			display_buffer(&bufl.v[bufl.n]);
 			break;
 		case 'h':
@@ -618,7 +618,7 @@ main(int argc, char *argv[])
 		case 'j':
 		case '\005': /* scroll down (^E) */
 			/* Scroll down one line. */
-			if (bufl.v[bufl.n].top + rows < bufl.v[bufl.n].stlength - 1) {
+			if (bufl.v[bufl.n].top + rows < bufl.v[bufl.n].st_amt - 1) {
 				bufl.v[bufl.n].top++;
 				display_buffer(&bufl.v[bufl.n]);
 			}
