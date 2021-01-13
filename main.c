@@ -559,15 +559,11 @@ main(int argc, char *argv[])
 		outofmem(EXIT_FAILURE);
 	}
 
-	init_buffer(&bufl.v[bufl.n], filel.v[0]);
-
-	/* To save time, we will only initialize buffers from file when the user
-	 * wants to view them. Before then, we will initialize all but the first of
-	 * the texts to NULL so that we can tell in the future whether or not we
-	 * have already initialized them or not.
+	/*
+	 * Iniitalize all buffers.
 	 */
-	for (i = 1; i < bufl.amt; i++) {
-		bufl.v[i].text = NULL;
+	for (i = 0; i < bufl.amt; i++) {
+		init_buffer(&bufl.v[i], filel.v[i]);
 	}
 
 	/*
@@ -609,9 +605,6 @@ main(int argc, char *argv[])
 			/* Move to the next-most-recent buffer. */
 			if (bufl.n > 0) {
 				bufl.n--;
-				if (bufl.v[bufl.n].text == NULL) {
-					init_buffer(&bufl.v[bufl.n], filel.v[bufl.n]);
-				}
 				display_buffer(&bufl.v[bufl.n]);
 			}
 			break;
@@ -650,9 +643,6 @@ main(int argc, char *argv[])
 			/* Move to the next-less-recent buffer. */
 			if (bufl.n < bufl.amt - 1) {
 				bufl.n++;
-				if (bufl.v[bufl.n].text == NULL) {
-					init_buffer(&bufl.v[bufl.n], filel.v[bufl.n]);
-				}
 				display_buffer(&bufl.v[bufl.n]);
 			}
 			break;
