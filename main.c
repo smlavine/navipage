@@ -59,7 +59,7 @@ typedef struct {
 	size_t length;
 
 	/* The amount of space allocated for the file. */
-	size_t size;
+	int size;
 
 	/* An array of pointers to the first character of every line. This is used
 	 * in scrolling.
@@ -67,15 +67,15 @@ typedef struct {
 	char **st;
 
 	/* How many lines there are in the buffer. */
-	size_t st_amt;
+	int st_amt;
 
 	/* The amount of space allocated for st. */
-	size_t st_size;
+	int st_size;
 
 	/* The variable such that st[top] points to the start of the line that is
 	 * drawn at the top of the screen. It changes when the screen is scrolled.
 	 */
-	size_t top;
+	int top;
 } Buffer;
 
 /*
@@ -102,10 +102,10 @@ typedef struct {
 	int amt;
 
 	/* The amount of space allocated for the array. */
-	size_t size;
+	int size;
 
 	/* The amount of allocated space that is being used for the array. */
-	size_t used;
+	int used;
 
 	/* Pointer to the array. */
 	char **v; 
@@ -130,7 +130,7 @@ static void info(void);
 static int init_buffer(Buffer *, char *);
 static void quit(void);
 static void redraw(void);
-static long scroll(long);
+static long scroll(int);
 static void scroll_to_top(void);
 static void scroll_to_bottom(void);
 static void update_rows(void);
@@ -363,20 +363,31 @@ cmpfilestring(const void *p1, const void *p2)
 static void
 display_buffer(Buffer *b)
 {
-	int i;
-	char *tmp;
-	int len;
+	int i, linestoprint, linelen;
+	char *eolptr;
 
 	cls();
 	gotoxy(1, 1);
-	for (i = 0; i < rows; i++) {
-		if ((tmp = strchr(b->st[b->top + i], '\n')) == NULL) {
-			tmp = strchr(b->st[b->top + i], '\0');
+	/* The amount of lines to be printed in this call. Print rows - 1 (the
+	 * height of the screen, not including the status bar), but only print
+	 * the amount of lines in the file if that is less than rows - 1, to
+	 * avoid a segfault.
+	 */
+	linestoprint = MIN(b->st_amt, rows - 1);
+	for (i = 0; i < linestoprint; i++) {
+		/* Find the location of the end of the line, or if an eol cannot be
+		 * found, then it is the last line in the file and we should find the
+		 * eof.
+		 */
+		if ((eolptr = strchr(b->st[b->top + i], '\n')) == NULL) {
+			eolptr = strchr(b->st[b->top + i], '\0');
 		}
-		len = tmp - b->st[b->top + i] + 1;
-		printf("%3zu ", b->top + i);
-		fwrite(b->st[b->top + i], sizeof(char), len, stdout);
+		linelen = eolptr - b->st[b->top + i] + 1;
+		/* Print the line number at the start of each line. */
+		printf("%3d ", b->top + i + 1);
+		fwrite(b->st[b->top + i], sizeof(char), linelen, stdout);
 	}
+	/* Print status-bar information. */
 	gotoxy(1, rows);
 	printf("#%d/%d  %s  %s",
 			bufl.n + 1, bufl.amt, filel.v[bufl.n], "Press 'i' for help.");
@@ -469,8 +480,6 @@ init_buffer(Buffer *b, char *path)
 {
 	FILE *fp;
 	size_t i;
-	/* This string is appended to the end of all buffers. */
-	const char *ENDSTR = "\n\n";
 
 	/* Each condition completes a task that I need to do to read the file into
 	 * the buffer, and also checks if it succeeded. If the condition is true,
@@ -497,7 +506,7 @@ init_buffer(Buffer *b, char *path)
 	 */
 	b->length = (size_t)ftell(fp);
 	rewind(fp);
-	b->size = b->length + strlen(ENDSTR) + 2;
+	b->size = b->length + 1;
 	if ((b->text = malloc(b->size*sizeof(char))) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
@@ -508,8 +517,6 @@ init_buffer(Buffer *b, char *path)
 
 	/* Terminate the string. */
 	b->text[b->length] = '\0';
-	strcat(b->text, ENDSTR);
-	b->length += strlen(ENDSTR);
 
 	/* Now we must find the amount of lines, and the location of all of the
 	 * starts of lines. This will be used in scrolling the screen.
@@ -576,12 +583,21 @@ redraw(void)
  * is returned.
  */
 static long
-scroll(long offset)
+scroll(int offset)
 {
-	long tmp;
-	tmp = (long)bufl.v[bufl.n].top + offset;
-	if (tmp < (long)(bufl.v[bufl.n].st_amt - rows) && tmp >= 0) {
-		bufl.v[bufl.n].top = (size_t)tmp;
+	int tmp;
+	tmp = bufl.v[bufl.n].top + offset;
+	/* tmp is the "new" line index. Compare it to see that it is less than the
+	 * amount of lines, minus the amount of rows because top is of course at
+	 * the top of the screen and, the end of the file will be at the bottom,
+	 * and add 1 to that number because we do not print on the bottom-most
+	 * line of the screen (that is for status information like the current
+	 * buffer), and 1 more because st_amt is 1-indexed while tmp is 0-indexed.
+	 * The second comparison is much simpler; simply see that the top of the
+	 * screen does not scroll behind the start of the file.
+	 */
+	if (tmp < bufl.v[bufl.n].st_amt - rows + 2 && tmp >= 0) {
+		bufl.v[bufl.n].top = tmp;
 		display_buffer(&bufl.v[bufl.n]);
 		return 0;
 	} else {
@@ -605,7 +621,7 @@ scroll_to_top(void)
 static void
 scroll_to_bottom(void)
 {
-	bufl.v[bufl.n].top = bufl.v[bufl.n].st_amt - 1 - rows;
+	bufl.v[bufl.n].top = bufl.v[bufl.n].st_amt - rows + 1;
 	display_buffer(&bufl.v[bufl.n]);
 }
 
