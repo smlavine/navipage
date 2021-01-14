@@ -118,11 +118,18 @@ typedef struct {
  * Function prototypes.
  */
 static int add_file(const char *, int);
+static int change_buffer(int);
 static void cleanup(int);
 static int cmpfilestring(const void *, const void *);
 static void display_buffer(Buffer *);
 static void error_buffer(Buffer *, const char *, ...);
+static void info();
 static int init_buffer(Buffer *, char *);
+static void quit(void);
+static void redraw(void);
+static long scroll(long);
+static void scroll_to_top(void);
+static void scroll_to_bottom(void);
 static void update_rows(void);
 static void usage(void);
 
@@ -264,6 +271,26 @@ add_file(const char *path, int recurse)
 }
 
 /*
+ * Move by 'offset' buffers in the buffer list. If the operation is
+ * successful, that is, the new value is in the range of possible indices,
+ * then 0 is returned; otherwise, the value that bufl.n would have been set
+ * to is returned.
+ */
+static int
+change_buffer(int offset)
+{
+	int tmp;
+	tmp = bufl.n + offset;
+	if (tmp >= 0 && tmp < bufl.amt) {
+		bufl.n = tmp;
+		display_buffer(&bufl.v[bufl.n]);
+		return 0;
+	} else {
+		return tmp;
+	}
+}
+
+/*
  * Cleans up terminal settings and the like before exitting the program.
  */
 static void
@@ -371,6 +398,31 @@ error_buffer(Buffer *b, const char *format, ...)
 }
 
 /*
+ * Display helpful information in the following order, with the next option
+ * being tried if the first fails:
+ * 1. man navipage
+ * 2. less README.md
+ * 3. Displaying a link to https://github.com/smlavine/navipage
+ */
+static void
+info()
+{
+	int ret;
+	ret = system("man navipage");
+	if (ret != 0) {
+		ret = system("less README.md");
+	}
+	if (ret != 0) {
+		gotoxy(1, rows);
+		setColor(YELLOW);
+		fputs("See <https://github.com/smlavine/navipage> for help.",
+				stdout);
+		resetColor();
+		fflush(stdout);
+	}
+}
+
+/*
  * Read the file at path into b, and set various values of b, like length,
  * top, offset, etc. Returns 0 on success, -1 on error.
  */
@@ -460,6 +512,66 @@ init_buffer(Buffer *b, char *path)
 }
 
 /*
+ * Quit navipage.
+ */
+static void
+quit(void)
+{
+	cleanup(0);
+	exit(EXIT_SUCCESS);
+}
+
+/*
+ * Redraw the current buffer.
+ */
+static void
+redraw(void)
+{
+	update_rows();
+	display_buffer(&bufl.v[bufl.n]);
+}
+
+/*
+ * Scroll by 'offset' lines in the buffer. If the operation is successful, that
+ * is, the caller doesn't try to scroll outside the bounds of the file, then 0
+ * is returned; otherwise, the line number that would have been scrolled to
+ * is returned.
+ */
+static long
+scroll(long offset)
+{
+	long tmp;
+	tmp = (long)bufl.v[bufl.n].top + offset;
+	if (tmp < (long)(bufl.v[bufl.n].st_amt - rows) && tmp >= 0) {
+		bufl.v[bufl.n].top = (size_t)tmp;
+		display_buffer(&bufl.v[bufl.n]);
+		return 0;
+	} else {
+		return tmp;
+	}
+}
+
+/*
+ * Scroll to the top of the buffer.
+ */
+static void
+scroll_to_top(void)
+{
+	bufl.v[bufl.n].top = 0;
+	display_buffer(&bufl.v[bufl.n]);
+}
+
+/*
+ * Scroll to the bottom of the buffer.
+ */
+static void
+scroll_to_bottom(void)
+{
+	bufl.v[bufl.n].top = bufl.v[bufl.n].st_amt - 1 - rows;
+	display_buffer(&bufl.v[bufl.n]);
+}
+
+/*
  * Update the 'rows' global variable, usually involving the rogueutil function
  * trows().
  */
@@ -481,7 +593,7 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	int helpret, c, i;
+	int c, i;
 	const char *optstring = "dhrv";
 
 	if (argc == 1) {
@@ -592,69 +704,37 @@ main(int argc, char *argv[])
 	for (;;) {
 		switch (nb_getch()) {
 		case 'g':
-			/* Automatically scroll to the top of the page. */
-			bufl.v[bufl.n].top = 0;
-			display_buffer(&bufl.v[bufl.n]);
+			scroll_to_top();
 			break;
 		case 'G':
-			/* Automatically scroll to the bottom of the page. */
-			bufl.v[bufl.n].top = bufl.v[bufl.n].st_amt - 1 - rows;
-			display_buffer(&bufl.v[bufl.n]);
+			scroll_to_bottom();
 			break;
 		case 'h':
 			/* Move to the next-most-recent buffer. */
-			if (bufl.n > 0) {
-				bufl.n--;
-				display_buffer(&bufl.v[bufl.n]);
-			}
+			change_buffer(-1);
 			break;
 		case 'i':
-			/* Find some helpful information. */
-			helpret = system("man navipage");
-			if (helpret != 0) {
-				helpret = system("less README.md");
-			}
-			if (helpret != 0) {
-				gotoxy(1, rows);
-				setColor(YELLOW);
-				fputs("See <https://github.com/smlavine/navipage> for help.",
-						stdout);
-				resetColor();
-				fflush(stdout);
-			}
+			info();
 			break;
 		case 'j':
 		case '\005': /* scroll down (^E) */
 			/* Scroll down one line. */
-			if (bufl.v[bufl.n].top + rows < bufl.v[bufl.n].st_amt - 1) {
-				bufl.v[bufl.n].top++;
-				display_buffer(&bufl.v[bufl.n]);
-			}
+			scroll(1);
 			break;
 		case 'k':
 		case '\031': /* scroll up (^Y) */
 			/* Scroll up one line. */
-			if (bufl.v[bufl.n].top > 0) {
-				bufl.v[bufl.n].top--;
-				display_buffer(&bufl.v[bufl.n]);
-			}
+			scroll(-1);
 			break;
 		case 'l':
 			/* Move to the next-less-recent buffer. */
-			if (bufl.n < bufl.amt - 1) {
-				bufl.n++;
-				display_buffer(&bufl.v[bufl.n]);
-			}
+			change_buffer(1);
 			break;
 		case 'q':
-			/* Quit navipage. */
-			cleanup(0);
-			exit(EXIT_SUCCESS);
+			quit();
 			break;
 		case 'r':
-			/* Redraw the buffer. */
-			update_rows();
-			display_buffer(&bufl.v[bufl.n]);
+			redraw();
 			break;
 		}
 	}
