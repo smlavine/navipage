@@ -35,9 +35,23 @@ Infinitely recurse in directories.
 Print version and exit.
 
 .SH USAGE
-At the moment,
 .B navipage
-works like a basic pager.
+is a pager, which means its primary function is to view files.
+.PP
+On startup,
+.B navipage
+will read all of the
+.I files
+passed as arguments into buffers, unless a file is a directory, in which case
+it will read all of the files in that directory. It will not go into
+directories within that directory unless the
+.B \-r
+option is specified.
+.PP
+.BR navipage "'s"
+key bindings are simple and few, and will be familiar to anyone who's used
+the popular *NIX programs
+.BR "less" "(1) or " "vi" "(1)."
 .TP
 .B g
 Scroll to the top of the file.

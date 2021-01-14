@@ -21,7 +21,15 @@ Option | Action
 
 # USAGE
 
-At the moment, **navipage** works like a basic pager.
+**navipage** is a pager, which means its primary function is to view files.
+
+On startup, **navipage** will read all of the _files_ passed as arguments into
+buffers, unless a file is a directory, in which case it will read all of the
+files in that directory. It will not go into directories within that
+directory unless the **-r** option is specified.
+
+**navipage**'s key bindings are simple and few, and will be familiar to
+anyone who's used the popular \*NIX programs **less**(1) or **vi**(1).
 
 Key           | Action
 --------------|-------
