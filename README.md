@@ -34,6 +34,7 @@ k / MouseUp   | Scroll up one line.
 l             | Move one buffer to the right.
 q             | Quit navipage.
 r             | Redraw the buffer.
+!             | Execute a command with sh.
 
 # INSPIRATION
 

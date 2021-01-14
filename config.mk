@@ -1,5 +1,5 @@
 # navipage version
-VERSION = 0.3.1
+VERSION = 0.4
 
 # paths
 PREFIX = /usr
@@ -11,7 +11,7 @@ LIBS = -L/usr/lib -lc
 
 # flags
 CPPFLAGS = -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\"
-CFLAGS = -std=c99 -pedantic -Wall -Wextra $(INCS) $(CPPFLAGS)
+CFLAGS = -std=c99 -pedantic -Wall -Wextra -lreadline $(INCS) $(CPPFLAGS)
 OPTIMFLAGS = -O3
 DEBUGFLAGS = -g -Og
 

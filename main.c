@@ -23,6 +23,8 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <readline/readline.h> /* Must be included after stdio.h. */
+#include <readline/history.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -123,7 +125,8 @@ static void cleanup(int);
 static int cmpfilestring(const void *, const void *);
 static void display_buffer(Buffer *);
 static void error_buffer(Buffer *, const char *, ...);
-static void info();
+static void execute_command(void);
+static void info(void);
 static int init_buffer(Buffer *, char *);
 static void quit(void);
 static void redraw(void);
@@ -398,6 +401,41 @@ error_buffer(Buffer *b, const char *format, ...)
 }
 
 /*
+ * Get a command from the user, then execute it.
+ */
+static void
+execute_command(void)
+{
+	char *line;
+	gotoxy(1, rows);
+	setColor(YELLOW);
+	/* Clear the line of text before showing the command prompt. */
+	printf("%*s", tcols(), "");
+	gotoxy(1, rows);
+	fflush(stdout);
+	/* Re-enable displaying user input. */
+	system("stty echo");
+	showcursor();
+	line = readline("!");
+	if (line != NULL) {
+		system(line);
+	}
+	gotoxy(1, rows);
+	/* The command could change the color of text, so we should re-set it here
+	 * in addition to above.
+	 */
+	setColor(YELLOW);
+	fputs("navipage: press any key to return.", stdout);
+	fflush(stdout);
+	anykey(NULL);
+	system("stty -echo");
+	hidecursor();
+	resetColor();
+	display_buffer(&bufl.v[bufl.n]);
+	free(line);
+}
+
+/*
  * Display helpful information in the following order, with the next option
  * being tried if the first fails:
  * 1. man navipage
@@ -405,7 +443,7 @@ error_buffer(Buffer *b, const char *format, ...)
  * 3. Displaying a link to https://github.com/smlavine/navipage
  */
 static void
-info()
+info(void)
 {
 	int ret;
 	ret = system("man navipage");
@@ -735,6 +773,9 @@ main(int argc, char *argv[])
 			break;
 		case 'r':
 			redraw();
+			break;
+		case '!':
+			execute_command();
 			break;
 		}
 	}
