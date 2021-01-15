@@ -651,20 +651,6 @@ main(int argc, char *argv[])
 	char *envstr;
 	const char *optstring = "dhrv";
 
-	/* Before we do anything, look to see if NAVIPAGE_SH is set, and if it is,
-	 * try to run it as a shell script.
-	 */
-	for (i = 0; (envstr = environ[i]) != NULL; i++) {
-		if (strstr(envstr, "NAVIPAGE_SH=") == envstr &&
-				(envstr = strchr(envstr, '=') + 1)[0] != '\0') {
-			/* Execute the shell script. */
-			const char *cmd = "sh ";
-			char fullcmd[strlen(cmd) + strlen(envstr) + 1];
-			sprintf(fullcmd, "%s%s", cmd, envstr);
-			system(fullcmd);
-		}
-	}
-
 	/* Call cleanup before suddenly exiting the program. */
 	signal(SIGINT, cleanup);
 	signal(SIGTERM, cleanup);
@@ -682,24 +668,6 @@ main(int argc, char *argv[])
 	update_rows();
 	flags.debug = 0;
 	flags.recurse_more = 0;
-
-	if (argc == 1) {
-		/* If NAVIPAGE_DIR is set, read all files in it (if it is a directory)
-		 * to filelist.
-		 */
-		for (i = 0; (envstr = environ[i]) != NULL; i++) {
-			if (strstr(envstr, "NAVIPAGE_DIR=") == envstr &&
-					(envstr = strchr(envstr, '=') + 1)[0] != '\0') {
-				flags.recurse_more = 1;
-				add_file(envstr, RECURSE);
-				flags.recurse_more = 0;
-			}
-		}
-		if (filel.amt == 0) {
-			usage();
-			exit(EXIT_FAILURE);
-		}
-	}
 
 	/* Handle options. */
 	while ((c = getopt(argc, argv, optstring)) != -1) {
@@ -723,6 +691,39 @@ main(int argc, char *argv[])
 			usage();
 			exit(EXIT_FAILURE);
 			break;
+		}
+	}
+
+	/* Before we read files, look to see if NAVIPAGE_SH is set, and if it is,
+	 * try to run it as a shell script.
+	 */
+	for (i = 0; (envstr = environ[i]) != NULL; i++) {
+		if (strstr(envstr, "NAVIPAGE_SH=") == envstr &&
+				(envstr = strchr(envstr, '=') + 1)[0] != '\0') {
+			/* Execute the shell script. */
+			const char *cmd = "sh ";
+			char fullcmd[strlen(cmd) + strlen(envstr) + 1];
+			sprintf(fullcmd, "%s%s", cmd, envstr);
+			system(fullcmd);
+		}
+	}
+
+	if (argc == 1) {
+		/* If NAVIPAGE_DIR is set, read all files in it (if it is a directory)
+		 * to filelist.
+		 */
+		for (i = 0; (envstr = environ[i]) != NULL; i++) {
+			if (strstr(envstr, "NAVIPAGE_DIR=") == envstr &&
+					(envstr = strchr(envstr, '=') + 1)[0] != '\0') {
+				int recurse_before = flags.recurse_more;
+				flags.recurse_more = 1;
+				add_file(envstr, RECURSE);
+				flags.recurse_more = recurse_before;
+			}
+		}
+		if (filel.amt == 0) {
+			usage();
+			exit(EXIT_FAILURE);
 		}
 	}
 
