@@ -28,6 +28,11 @@ buffers, unless a file is a directory, in which case it will read all of the
 files in that directory. It will not go into directories within that
 directory unless the **-r** option is specified.
 
+If **$NAVIPAGE_SH** is set, then the file it lists will be ran as a shell
+script before doing anything else.
+
+If **$NAVIPAGE_DIR** is set, then all the files in that directory will be read, as if they were passed as arguments and -r was set.
+
 **navipage**'s key bindings are simple and few, and will be familiar to
 anyone who's used the popular \*NIX programs **less**(1) or **vi**(1).
 

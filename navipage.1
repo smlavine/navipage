@@ -48,6 +48,18 @@ directories within that directory unless the
 .B \-r
 option is specified.
 .PP
+If
+.B $NAVIPAGE_SH
+is set, then the file it lists will be ran as a shell script before doing
+anything else.
+.PP
+If
+.B $NAVIPAGE_DIR
+is set, then all the files in that directory will be read, as if they were
+passed as arguments and
+.B \-r
+was set.
+.PP
 .BR navipage "'s"
 key bindings are simple and few, and will be familiar to anyone who's used
 the popular *NIX programs
