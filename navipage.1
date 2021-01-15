@@ -31,6 +31,11 @@ Print usage information and exit.
 .B \-r
 Infinitely recurse in directories.
 .TP
+.B \-s
+If
+.B $NAVIPAGE_SH
+is set, run it as a shell script before files are read.
+.TP
 .B \-v
 Print version and exit.
 
@@ -49,6 +54,8 @@ directories within that directory unless the
 option is specified.
 .PP
 If
+.B \-s
+was specified and
 .B $NAVIPAGE_SH
 is set, then that file will be ran as a shell script before files are read. See
 below for an example.

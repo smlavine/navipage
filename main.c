@@ -114,6 +114,7 @@ typedef struct {
 typedef struct {
 	unsigned int debug:1;
 	unsigned int recurse_more:1;
+	unsigned int sh:1;
 } Flags;
 
 /*
@@ -156,6 +157,8 @@ static const char *USAGE =
 "    -d  Enable debug output.\n"
 "    -h  Print this help and exit.\n"
 "    -r  Infinitely recurse in directories.\n"
+"    -s  If $NAVIPAGE_SH is set, run it as a\n"
+"        shell script before files are read.\n"
 "    -v  Print version and exit.\n";
 
 /*
@@ -649,7 +652,7 @@ main(int argc, char *argv[])
 {
 	int c, i;
 	char *envstr;
-	const char *optstring = "dhrv";
+	const char *optstring = "dhrsv";
 
 	/* Call cleanup before suddenly exiting the program. */
 	signal(SIGINT, cleanup);
@@ -682,6 +685,9 @@ main(int argc, char *argv[])
 		case 'r':
 			flags.recurse_more = 1;
 			break;
+		case 's':
+			flags.sh = 1;
+			break;
 		case 'v':
 			printf("navipage version %s\n", VERSION);
 			exit(EXIT_SUCCESS);
@@ -694,21 +700,28 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* Before we read files, look to see if NAVIPAGE_SH is set, and if it is,
-	 * try to run it as a shell script.
+	/* If -s was specified, look for $NAVIPAGE_SH. If it exists, run it as a
+	 * shell script.
 	 */
-	for (i = 0; (envstr = environ[i]) != NULL; i++) {
-		if (strstr(envstr, "NAVIPAGE_SH=") == envstr &&
-				(envstr = strchr(envstr, '=') + 1)[0] != '\0') {
-			/* Execute the shell script. */
-			const char *cmd = "sh ";
-			char fullcmd[strlen(cmd) + strlen(envstr) + 1];
-			sprintf(fullcmd, "%s%s", cmd, envstr);
-			system(fullcmd);
+	if (flags.sh) {
+		for (i = 0; (envstr = environ[i]) != NULL; i++) {
+			if (strstr(envstr, "NAVIPAGE_SH=") == envstr &&
+					(envstr = strchr(envstr, '=') + 1)[0] != '\0') {
+				/* Execute the shell script. */
+				const char *cmd = "sh ";
+				char fullcmd[strlen(cmd) + strlen(envstr) + 1];
+				sprintf(fullcmd, "%s%s", cmd, envstr);
+				system(fullcmd);
+			}
 		}
 	}
 
-	if (argc == 1) {
+
+	/* Set argc/argv to remaining arguments. */
+	argc -= optind;
+	argv += optind;
+
+	if (argc == 0) {
 		/* If NAVIPAGE_DIR is set, read all files in it (if it is a directory)
 		 * to filelist.
 		 */
@@ -726,10 +739,6 @@ main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
-
-	/* Set argc/argv to remaining arguments. */
-	argc -= optind;
-	argv += optind;
 
 	/* All remaining arguments should be paths to files to be read. */
 	for (i = 0; i < argc; i++) {

@@ -21,6 +21,7 @@ Option | Action
 -d     | Enable debug output.
 -h     | Print usage information and exit.
 -r     | Infinitely recurse in directories.
+-s     | If **$NAVIPAGE_SH** is set, run it as a shell script before files are read.
 -v     | Print version and exit.
 
 # USAGE
@@ -32,8 +33,8 @@ buffers, unless a file is a directory, in which case it will read all of the
 files in that directory. It will not go into directories within that
 directory unless the **-r** option is specified.
 
-If **$NAVIPAGE_SH** is set, then that file will be ran as a shell script before
-files are read.
+If **-s** was specified and **$NAVIPAGE_SH** is set, then that file will be ran
+as a shell script before files are read. See below for an example.
 
 If **$NAVIPAGE_DIR** is set, then all the files in that directory will be read, as if they were passed as arguments and -r was set.
 
