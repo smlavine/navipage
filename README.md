@@ -10,6 +10,10 @@ navipage - multi-file pager for watching YouTube videos
 
 **navipage** is a multi-file pager with features to streamline watching YouTube videos which are linked in a file.
 
+_NOTE:_ **navipage** is in an early stage of development. It may have bugs, and
+the documentation may at times be outdated or inaccurate. Do not use if you
+expect otherwise.
+
 # OPTIONS
 
 Option | Action
@@ -83,6 +87,7 @@ along with navipage. If not, see <https://www.gnu.org/licenses/>.
 # LIBRARIES
 
 **navipage** makes use of the following libraries:
+- [GNU readline](https://tiswww.case.edu/php/chet/readline/rltop.html)
 - [rogueutil](https://github.com/sakhmatd/rogueutil)
 
 # QUESTIONS, QUERIES, POSERS, CONCERNS, THINGS THAT HAUNT YOU IN THE NIGHT
