@@ -795,18 +795,8 @@ main(int argc, char *argv[])
 	 * The main input loop!
 	 */
 	for (;;) {
-		/* This msleep call reduces CPU usage by 15x to 8x. The only noticeable
-		 * difference (apart from the significantly better performance) is some
-		 * slight flickering when scrolling with the mouse extremely quickly,
-		 * however this is not often done and does not significant impair
-		 * usage of the program. If used with greater milliseconds, however, it
-		 * could result in more significant flickering and significant input
-		 * lag, so be cautious.
-		 */
-		const int WAIT = 3;
-		msleep(WAIT);
 
-		switch (nb_getch()) {
+		switch (getch()) {
 		case 'g':
 			scroll_to_top();
 			break;
