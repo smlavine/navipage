@@ -122,14 +122,14 @@ typedef struct {
  */
 static int add_file(const char *, int);
 static int change_buffer(int);
-static void cleanup(int);
+static void cleanup(void);
 static int cmpfilestring(const void *, const void *);
 static void display_buffer(Buffer *);
 static void error_buffer(Buffer *, const char *, ...);
 static void execute_command(void);
 static void info(void);
 static int init_buffer(Buffer *, char *);
-static void quit(void);
+static void quit(int);
 static void redraw(void);
 static long scroll(int);
 static void scroll_to_top(void);
@@ -297,25 +297,18 @@ change_buffer(int offset)
 }
 
 /*
- * Cleans up terminal settings and the like before exitting the program.
+ * Cleans up terminal settings and the like which were modified by navipage.
+ * Usually called before exitting the program.
  */
 static void
-cleanup(int sig)
+cleanup(void)
 {
-	switch (sig) {
-	case 0: /* Used when I want to cleanup without raising a signal. */
-	case SIGINT:
-	case SIGTERM:
-	case SIGQUIT:
-	case SIGSEGV:
-	case SIGHUP:
-		system("stty sane");
-		showcursor();
-		/* Print a blank line to return shell prompt to the beginning of the
-		 * next line.
-		 */
-		puts("");
-	}
+	system("stty sane");
+	showcursor();
+	/* Print a blank line to return shell prompt to the beginning of the
+	 * next line.
+	 */
+	puts("");
 }
 
 /*
@@ -563,10 +556,23 @@ init_buffer(Buffer *b, char *path)
  * Quit navipage.
  */
 static void
-quit(void)
+quit(int n)
 {
-	cleanup(0);
-	exit(EXIT_SUCCESS);
+	cleanup();
+	switch (n) {
+	case SIGINT:
+	case SIGTERM:
+	case SIGQUIT:
+		exit(EXIT_SUCCESS);
+		break;
+	case SIGSEGV:
+	case SIGHUP:
+		exit(EXIT_FAILURE);
+		break;
+	default:
+		exit(n);
+		break;
+	}
 }
 
 /*
@@ -654,12 +660,11 @@ main(int argc, char *argv[])
 	char *envstr;
 	const char *optstring = "dhrsv";
 
-	/* Call cleanup before suddenly exiting the program. */
-	signal(SIGINT, cleanup);
-	signal(SIGTERM, cleanup);
-	signal(SIGQUIT, cleanup);
-	signal(SIGSEGV, cleanup);
-	signal(SIGHUP, cleanup);
+	signal(SIGINT, quit);
+	signal(SIGTERM, quit);
+	signal(SIGQUIT, quit);
+	signal(SIGSEGV, quit);
+	signal(SIGHUP, quit);
 
 	/* Initialize variables. */
 	argv0 = argv[0];
@@ -825,7 +830,7 @@ main(int argc, char *argv[])
 			change_buffer(1);
 			break;
 		case 'q':
-			quit();
+			quit(0);
 			break;
 		case 'r':
 			redraw();
