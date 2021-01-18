@@ -47,6 +47,36 @@ enum {
 	RECURSE = 1,
 };
 
+/* The result of a search for a regex.
+ */
+typedef struct {
+	/* A pointer to the match. */
+	char *p;
+
+	/* The length of the match. */
+	int len;
+} SearchResult;
+
+/* Information relating to a search, including the regex searched for, and a
+ * list of SearchResults.
+ */
+typedef struct {
+	/* The current regex that has been searched for. */
+	re_t search;
+
+	/* The string corresponding to search. */
+	char *regex;
+
+	/* An array of SearchResults. */
+	SearchResult *v;
+
+	/* How many matches there are in v. */
+	int amt;
+
+	/* The amount of space allocated for v. */
+	int size;
+} Search;
+
 /*
  * A file buffer. This contains the actual text of the file, but also
  * pointers to the line breaks of the file, which come into use when the file
@@ -77,26 +107,9 @@ typedef struct {
 	 * drawn at the top of the screen. It changes when the screen is scrolled.
 	 */
 	int top;
-
-	/* The current regex that has been searched for, if one has been searched
-	 * for; otherwise it is NULL.
-	 */
-	re_t buf_search;
-
-	/* The string corresponding to buf_search. */
-	char *buf_search_regex;
-
-	/* An array of pointers to the strings in the buffer that match
-	 * buf_search.
-	 */
-	char **buf_results;
-
-	/* How many matches there are for buf_search in the buffer. */
-	int buf_results_amt;
-
-	/* The amount of space allocated for buf_results. */
-	int buf_results_size;
-
+	
+	/* Information relating to a search of the buffer for a regex. */
+	Search s;
 } Buffer;
 
 /*
@@ -157,7 +170,7 @@ static void redraw(void);
 static long scroll(int);
 static void scroll_to_top(void);
 static void scroll_to_bottom(void);
-static void search_buffer(const char *);
+static void search_buffer(const char *, Buffer *);
 static void update_rows(void);
 static void usage(void);
 
@@ -395,7 +408,8 @@ display_buffer(Buffer *b)
 	 */
 	linestoprint = MIN(b->st_amt, rows - 1);
 	for (i = 0; i < linestoprint; i++) {
-		/* Find the location of the end of the line, or if an eol cannot be
+		/* Find the locati);
+		 * }on of the end of the line, or if an eol cannot be
 		 * found, then it is the last line in the file and we should find the
 		 * eof.
 		 */
@@ -576,13 +590,11 @@ init_buffer(Buffer *b, char *path)
 
 	/* Initialize search values. */
 
-	/* NULL means that no search has yet been made on this buffer. */
-	b->buf_search = NULL;
-	b->buf_search_regex = NULL;
-	b->buf_results = NULL;
-	b->buf_results_amt = 0;
-	b->buf_results_size = 0;
-
+	b->s.search = NULL;
+	b->s.regex = NULL;
+	b->s.v = NULL;
+	b->s.amt = 0;
+	b->s.size = 0;
 	return 0;
 }
 
@@ -655,7 +667,7 @@ prompt_search(void)
 	showcursor();
 	line = readline("/");
 	if (line != NULL) {
-		search_buffer(line);
+		search_buffer(line, &bufl.v[bufl.n]);
 	}
 	gotoxy(1, rows);
 	system("stty -echo");
@@ -749,12 +761,31 @@ scroll_to_bottom(void)
 }
 
 /*
- * Search the current buffer for the given regex.
+ * Search the given buffer for the given regex.
  */
 static void
-search_buffer(const char *regex)
+search_buffer(const char *regex, Buffer *b)
 {
-	/* TODO: write function. */
+	int index;
+
+	/* If a term has already been searched for in this session, free the
+	 * current regex string to avoid memory leak. Then copy the regex string
+	 * into the current buffer, because it will be freed by prompt_search(),
+	 * and compile the regex.
+	 */
+	if (b->s.search != NULL) {
+		free(b->s.regex);
+		free(b->s.v);
+	}
+	b->s.amt = 0;
+	b->s.regex = malloc((strlen(regex) + 1)*sizeof(char));
+	strcpy(b->s.regex, regex);
+	b->s.search = re_compile(b->s.regex);
+	b->s.size = 10;
+	b->s.v = malloc(b->s.size*sizeof(SearchResult));
+	if (b->s.v == NULL) {
+		outofmem(EXIT_FAILURE);
+	}
 }
 
 /*
