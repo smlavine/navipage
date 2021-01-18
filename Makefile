@@ -2,8 +2,8 @@
 
 include config.mk
 
-CFILES = main.c
-HFILES = rogueutil.h
+CFILES = main.c re.c
+HFILES = rogueutil.h re.h
 
 all: options navipage
 
