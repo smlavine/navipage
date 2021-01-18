@@ -129,6 +129,7 @@ static void error_buffer(Buffer *, const char *, ...);
 static void execute_command(void);
 static void info(void);
 static int init_buffer(Buffer *, char *);
+static void input_loop(void);
 static void quit(int);
 static void redraw(void);
 static long scroll(int);
@@ -553,6 +554,54 @@ init_buffer(Buffer *b, char *path)
 }
 
 /*
+ * The main input loop.
+ */
+static void
+input_loop(void)
+{
+	for (;;) {
+		switch (getch()) {
+		case 'g':
+			scroll_to_top();
+			break;
+		case 'G':
+			scroll_to_bottom();
+			break;
+		case 'h':
+			/* Move to the next-most-recent buffer. */
+			change_buffer(-1);
+			break;
+		case 'i':
+			info();
+			break;
+		case 'j':
+		case '\005': /* scroll down (^E) */
+			/* Scroll down one line. */
+			scroll(1);
+			break;
+		case 'k':
+		case '\031': /* scroll up (^Y) */
+			/* Scroll up one line. */
+			scroll(-1);
+			break;
+		case 'l':
+			/* Move to the next-less-recent buffer. */
+			change_buffer(1);
+			break;
+		case 'q':
+			quit(0);
+			break;
+		case 'r':
+			redraw();
+			break;
+		case '!':
+			execute_command();
+			break;
+		}
+	}
+}
+
+/*
  * Quit navipage.
  */
 static void
@@ -795,51 +844,7 @@ main(int argc, char *argv[])
 	 * Showtime.
 	 */
 	display_buffer(&bufl.v[bufl.n]);
-
-	/*
-	 * The main input loop!
-	 */
-	for (;;) {
-
-		switch (getch()) {
-		case 'g':
-			scroll_to_top();
-			break;
-		case 'G':
-			scroll_to_bottom();
-			break;
-		case 'h':
-			/* Move to the next-most-recent buffer. */
-			change_buffer(-1);
-			break;
-		case 'i':
-			info();
-			break;
-		case 'j':
-		case '\005': /* scroll down (^E) */
-			/* Scroll down one line. */
-			scroll(1);
-			break;
-		case 'k':
-		case '\031': /* scroll up (^Y) */
-			/* Scroll up one line. */
-			scroll(-1);
-			break;
-		case 'l':
-			/* Move to the next-less-recent buffer. */
-			change_buffer(1);
-			break;
-		case 'q':
-			quit(0);
-			break;
-		case 'r':
-			redraw();
-			break;
-		case '!':
-			execute_command();
-			break;
-		}
-	}
+	input_loop();
 
 	return 0;
 }
