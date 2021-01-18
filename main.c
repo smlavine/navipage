@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "re.h"
 #include "rogueutil.h"
 
 #define outofmem(x)	fprintf(stderr, "%s: error: out of memory\n", argv0);\
@@ -76,6 +77,26 @@ typedef struct {
 	 * drawn at the top of the screen. It changes when the screen is scrolled.
 	 */
 	int top;
+
+	/* The current regex that has been searched for, if one has been searched
+	 * for; otherwise it is NULL.
+	 */
+	re_t buf_search;
+	
+	/* The string corresponding to buf_search. */
+	char *buf_search_regex;
+
+	/* An array of pointers to the strings in the buffer that match
+	 * buf_search.
+	 */
+	char **buf_results;
+
+	/* How many matches there are for buf_search in the buffer. */
+	int buf_results_amt;
+
+	/* The amount of space allocated for buf_results. */
+	int buf_results_size;
+
 } Buffer;
 
 /*
@@ -130,11 +151,13 @@ static void execute_command(void);
 static void info(void);
 static int init_buffer(Buffer *, char *);
 static void input_loop(void);
+static void prompt_search(void);
 static void quit(int);
 static void redraw(void);
 static long scroll(int);
 static void scroll_to_top(void);
 static void scroll_to_bottom(void);
+static void search_buffer(const char *);
 static void update_rows(void);
 static void usage(void);
 
@@ -550,6 +573,16 @@ init_buffer(Buffer *b, char *path)
 			b->st_amt++;
 		}
 	}
+
+	/* Initialize search values. */
+
+	/* NULL means that no search has yet been made on this buffer. */
+	b->buf_search = NULL;
+	b->buf_search_regex = NULL;
+	b->buf_results = NULL;
+	b->buf_results_amt = 0;
+	b->buf_results_size = 0;
+
 	return 0;
 }
 
@@ -597,8 +630,40 @@ input_loop(void)
 		case '!':
 			execute_command();
 			break;
+		case '/':
+			prompt_search();
+			break;
 		}
 	}
+}
+
+/*
+ * Obtain a regex to search for in the current buffer.
+ */
+static void
+prompt_search(void)
+{
+	char *line;
+	gotoxy(1, rows);
+	setColor(YELLOW);
+	/* Clear the line of text before showing the search prompt. */
+	printf("%*s", tcols(), "");
+	gotoxy(1, rows);
+	fflush(stdout);
+	/* Re-enable displaying user input. */
+	system("stty echo");
+	showcursor();
+	line = readline("/");
+	if (line != NULL) {
+		search_buffer(line);
+	}
+	gotoxy(1, rows);
+	system("stty -echo");
+	hidecursor();
+	resetColor();
+	display_buffer(&bufl.v[bufl.n]);
+	/* TODO: display search results like vim does in the buffer. */
+	free(line);
 }
 
 /*
@@ -681,6 +746,15 @@ scroll_to_bottom(void)
 {
 	bufl.v[bufl.n].top = bufl.v[bufl.n].st_amt - rows + 1;
 	display_buffer(&bufl.v[bufl.n]);
+}
+
+/*
+ * Search the current buffer for the given regex.
+ */
+static void
+search_buffer(const char *regex)
+{
+	/* TODO: write function. */
 }
 
 /*
