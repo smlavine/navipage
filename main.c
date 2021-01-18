@@ -82,7 +82,7 @@ typedef struct {
 	 * for; otherwise it is NULL.
 	 */
 	re_t buf_search;
-	
+
 	/* The string corresponding to buf_search. */
 	char *buf_search_regex;
 
