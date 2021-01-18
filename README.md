@@ -118,6 +118,7 @@ along with navipage. If not, see <https://www.gnu.org/licenses/>.
 **navipage** makes use of the following libraries:
 - [GNU readline](https://tiswww.case.edu/php/chet/readline/rltop.html)
 - [rogueutil](https://github.com/sakhmatd/rogueutil)
+- [tiny-regex-c](https://github.com/kokke/tiny-regex-c)
 
 # QUESTIONS, QUERIES, POSERS, CONCERNS, THINGS THAT HAUNT YOU IN THE NIGHT
 
