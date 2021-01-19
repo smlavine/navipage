@@ -766,7 +766,10 @@ scroll_to_bottom(void)
 static void
 search_buffer(const char *regex, Buffer *b)
 {
-	int index;
+	int index, matchlength;
+	char *front;
+
+	front = b->text;
 
 	/* If a term has already been searched for in this session, free the
 	 * current regex string to avoid memory leak. Then copy the regex string
@@ -785,6 +788,33 @@ search_buffer(const char *regex, Buffer *b)
 	b->s.v = malloc(b->s.size*sizeof(SearchResult));
 	if (b->s.v == NULL) {
 		outofmem(EXIT_FAILURE);
+	}
+
+	/* Starting at the top of the file, search for matches to the regex. If
+	 * a match is found, then it is added to b->s.v, and front is set to the
+	 * character after the end of the match. The loop continues until a match
+	 * is not found, meaning all of the matches in the file have been found.
+	 */
+	while ((index = re_matchp(b->s.search, front, &matchlength)) != -1) {
+		/* Reallocate, if there isn't enough space. */
+		if (b->s.amt >= b->s.size) {
+			b->s.v = realloc(b->s.v, (b->s.size += 10)*sizeof(SearchResult));
+			if (b->s.v == NULL) {
+				outofmem(EXIT_FAILURE);
+			}
+		}
+		/* Record location and length of match. */
+		b->s.v[b->s.amt].p = &front[index];
+		b->s.v[b->s.amt].len = matchlength;
+		b->s.amt++;
+		/* Move front to after the pattern, unless the end of the file would
+		 * be reached.
+		 */
+		if ((size_t)(index + matchlength) < b->length) {
+			front = &front[index + matchlength];
+		} else {
+			break;
+		}
 	}
 }
 
