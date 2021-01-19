@@ -188,6 +188,11 @@ Flags flags;
 FileList filel;
 BufferList bufl;
 int rows;
+/* ANSI escape code to swap the foreground and background colors. This is used
+ * to create a 'highlight' of search results.
+ */
+static const char *REVERSE_VIDEO = "\033[07m";
+
 static const char *USAGE =
 "navipage - multi-file pager for watching YouTube videos\n"
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
