@@ -417,6 +417,8 @@ display_buffer(Buffer *b)
 	 */
 	linestoprint = MIN(b->st_amt, rows - 1);
 	for (i = 0; i < linestoprint; i++) {
+		/* Print the line number at the start of each line. */
+		printf("%3d ", b->top + i + 1);
 		/* Find the location of the end of the line, or if an eol cannot be
 		 * found, then it is the last line in the file and we should find the
 		 * eof.
@@ -425,8 +427,6 @@ display_buffer(Buffer *b)
 			eolptr = strchr(b->st[b->top + i], '\0');
 		}
 		linelen = eolptr - b->st[b->top + i] + 1;
-		/* Print the line number at the start of each line. */
-		printf("%3d ", b->top + i + 1);
 		fwrite(b->st[b->top + i], sizeof(char), linelen, stdout);
 	}
 	/* Print status-bar information. */
