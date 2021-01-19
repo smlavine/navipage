@@ -107,7 +107,7 @@ typedef struct {
 	 * drawn at the top of the screen. It changes when the screen is scrolled.
 	 */
 	int top;
-	
+
 	/* Information relating to a search of the buffer for a regex. */
 	Search s;
 } Buffer;
