@@ -408,8 +408,7 @@ display_buffer(Buffer *b)
 	 */
 	linestoprint = MIN(b->st_amt, rows - 1);
 	for (i = 0; i < linestoprint; i++) {
-		/* Find the locati);
-		 * }on of the end of the line, or if an eol cannot be
+		/* Find the location of the end of the line, or if an eol cannot be
 		 * found, then it is the last line in the file and we should find the
 		 * eof.
 		 */
