@@ -75,6 +75,10 @@ typedef struct {
 
 	/* The amount of space allocated for v. */
 	int size;
+
+	/* Such that v[current] is the currently highlighted result in the buffer.
+	 */
+	int current;
 } Search;
 
 /*
@@ -594,6 +598,7 @@ init_buffer(Buffer *b, char *path)
 	b->s.v = NULL;
 	b->s.amt = 0;
 	b->s.size = 0;
+	b->s.current = 0;
 	return 0;
 }
 
