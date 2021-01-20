@@ -417,7 +417,15 @@ display_buffer(Buffer *b)
 	 */
 	linestoprint = MIN(b->st_amt, rows - 1);
 	for (i = 0; i < linestoprint; i++) {
-		/* Print the line number at the start of each line. */
+		/* If this line has a search match, print it in color. */
+		if (b->s.search != NULL &&
+				b->st[b->top + i] <= b->s.v[b->s.current].p &&
+				b->s.v[b->s.current].p <=
+				(i == linestoprint - 1 ?
+				 &b->text[b->length - 1] :
+				 b->st[b->top + i + 1])) {
+			setColor(GREEN);
+		}
 		printf("%3d ", b->top + i + 1);
 		/* Find the location of the end of the line, or if an eol cannot be
 		 * found, then it is the last line in the file and we should find the
@@ -428,6 +436,10 @@ display_buffer(Buffer *b)
 		}
 		linelen = eolptr - b->st[b->top + i] + 1;
 		fwrite(b->st[b->top + i], sizeof(char), linelen, stdout);
+		/* Set color back to normal for next line, if there was a search
+		 * match on this line.
+		 */
+		resetColor();
 	}
 	/* Print status-bar information. */
 	gotoxy(1, rows);
@@ -676,7 +688,21 @@ prompt_search(void)
 	showcursor();
 	line = readline("/");
 	if (line != NULL) {
-		search_buffer(line, &bufl.v[bufl.n]);
+		/* If nothing was entered on the line, don't search for it, but do
+		 * delete the current search term. */
+		if (strlen(line) == 0) {
+			if (bufl.v[bufl.n].s.search != NULL) {
+				free(bufl.v[bufl.n].s.regex);
+				free(bufl.v[bufl.n].s.v);
+			}
+			bufl.v[bufl.n].s.search = NULL;
+			bufl.v[bufl.n].s.regex = NULL;
+			bufl.v[bufl.n].s.v = NULL;
+			bufl.v[bufl.n].s.amt = 0;
+			bufl.v[bufl.n].s.size = 0;
+		} else {
+			search_buffer(line, &bufl.v[bufl.n]);
+		}
 	}
 	gotoxy(1, rows);
 	system("stty -echo");
@@ -811,6 +837,7 @@ search_buffer(const char *regex, Buffer *b)
 			if (b->s.v == NULL) {
 				outofmem(EXIT_FAILURE);
 			}
+			b->s.amt = 0;
 		}
 		/* Record location and length of match. */
 		b->s.v[b->s.amt].p = &front[index];
