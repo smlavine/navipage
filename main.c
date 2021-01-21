@@ -405,7 +405,7 @@ cmpfilestring(const void *p1, const void *p2)
 static void
 display_buffer(Buffer *b)
 {
-	int i, linestoprint, linelen;
+	int i, lines, linelen;
 	char *eolptr;
 
 	cls();
@@ -415,8 +415,8 @@ display_buffer(Buffer *b)
 	 * the amount of lines in the file if that is less than rows - 1, to
 	 * avoid a segfault.
 	 */
-	linestoprint = MIN(b->st_amt, rows - 1);
-	for (i = 0; i < linestoprint; i++) {
+	lines = MIN(b->st_amt, rows - 1);
+	for (i = 0; i < lines; i++) {
 		/* Print the line number at the start of each line. */
 		printf("%3d ", b->top + i + 1);
 		/* Find the location of the end of the line, or if an eol cannot be
