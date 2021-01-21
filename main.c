@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <libgen.h>
+#include <math.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -36,6 +37,7 @@
 
 #define outofmem(x)	fprintf(stderr, "%s: error: out of memory\n", argv0);\
 	exit((x));
+#define numlen(x)   ((x) != 0 ? (floor(log10(abs((x)))) + 1) : 1)
 #define MAX(A, B)   ((A) > (B) ? (A) : (B))
 #define MIN(A, B)   ((A) < (B) ? (A) : (B))
 
