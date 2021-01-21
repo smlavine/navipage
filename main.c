@@ -703,6 +703,8 @@ quit(int n)
 		exit(EXIT_SUCCESS);
 		break;
 	case SIGSEGV:
+		puts("Segmentation fault (core dumped)");
+		/* fallthrough */
 	case SIGHUP:
 		exit(EXIT_FAILURE);
 		break;
