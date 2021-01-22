@@ -405,34 +405,42 @@ cmpfilestring(const void *p1, const void *p2)
 static void
 display_buffer(Buffer *b)
 {
-	int i, lines, linelen;
-	char *eolptr;
+	int i;
+	int lines;
+	size_t *linelen;
+	char status[512];
+	size_t statuslen;
 
-	cls();
-	gotoxy(1, 1);
-	/* The amount of lines to be printed in this call. Print rows - 1 (the
-	 * height of the screen, not including the status bar), but only print
-	 * the amount of lines in the file if that is less than rows - 1, to
-	 * avoid a segfault.
-	 */
 	lines = MIN(b->st_amt, rows - 1);
+	linelen = malloc(lines*sizeof(size_t));
+	if (linelen == NULL) {
+		outofmem(EXIT_FAILURE);
+	}
+	statuslen = snprintf(status, 512, "#%d/%d  %s",
+			bufl.n + 1, bufl.amt, filel.v[bufl.n]);
+
 	for (i = 0; i < lines; i++) {
-		/* Print the line number at the start of each line. */
-		printf("%3d ", b->top + i + 1);
-		/* Find the location of the end of the line, or if an eol cannot be
-		 * found, then it is the last line in the file and we should find the
-		 * eof.
+		char *eolptr;
+		eolptr = strchr(b->st[b->top + i], '\n');
+		/* If a '\n' wasn't found, then we are in the last line of the
+		 * file. The file is NUL-terminated, so find the NUL.
 		 */
-		if ((eolptr = strchr(b->st[b->top + i], '\n')) == NULL) {
+		if (eolptr == NULL) {
 			eolptr = strchr(b->st[b->top + i], '\0');
 		}
-		linelen = eolptr - b->st[b->top + i] + 1;
-		fwrite(b->st[b->top + i], sizeof(char), linelen, stdout);
+		linelen[i] = eolptr - b->st[b->top + i] + 1;
+	}
+	cls();
+	gotoxy(1, 1);
+	for (i = 0; i < lines; i++) {
+		/* Line number. */
+		printf("%3d ", b->top + i + 1);
+		/* Line. */
+		fwrite(b->st[b->top + i], sizeof(char), linelen[i], stdout);
 	}
 	/* Print status-bar information. */
-	gotoxy(1, rows);
-	printf("#%d/%d  %s  %s",
-			bufl.n + 1, bufl.amt, filel.v[bufl.n], "Press 'i' for help.");
+	gotoxy(1, trows() - (statuslen / (size_t) tcols()));
+	fprintf(stdout, status);
 	fflush(stdout);
 }
 
