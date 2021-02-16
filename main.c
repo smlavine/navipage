@@ -149,7 +149,7 @@ FileList filel;
 BufferList bufl;
 int rows;
 static const char *USAGE =
-"navipage - multi-file pager for watching YouTube videos\n"
+"navipage v" VERSION "\n"
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "This program is free software (GPLv3+); see 'man navipage'\n"
 "or <github.com/smlavine/navipage> for more information.\n"
@@ -159,8 +159,7 @@ static const char *USAGE =
 "    -h  Print this help and exit.\n"
 "    -r  Infinitely recurse in directories.\n"
 "    -s  If $NAVIPAGE_SH is set, run it as a\n"
-"        shell script before files are read.\n"
-"    -v  Print version and exit.\n";
+"        shell script before files are read.\n";
 
 /*
  * Append the given file path to filel. If the file is a directory, and
@@ -741,10 +740,6 @@ main(int argc, char *argv[])
 			break;
 		case 's':
 			flags.sh = 1;
-			break;
-		case 'v':
-			printf("navipage version %s\n", VERSION);
-			exit(EXIT_SUCCESS);
 			break;
 		case ':':
 		case '?':
