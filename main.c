@@ -589,7 +589,7 @@ input_loop(void)
 			change_buffer(1);
 			break;
 		case 'q':
-			quit(0);
+			quit(EXIT_SUCCESS);
 			break;
 		case 'r':
 			redraw();
