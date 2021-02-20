@@ -576,6 +576,10 @@ input_loop(void)
 			/* Move to the next-most-recent buffer. */
 			change_buffer(bufl.n - 1);
 			break;
+		case 'H':
+			/* Move to the first buffer. */
+			change_buffer(0);
+			break;
 		case 'i':
 			info();
 			break;
@@ -592,6 +596,10 @@ input_loop(void)
 		case 'l':
 			/* Move to the next-less-recent buffer. */
 			change_buffer(bufl.n + 1);
+			break;
+		case 'L':
+			/* Move to the last buffer. */
+			change_buffer(bufl.amt - 1);
 			break;
 		case 'q':
 			quit(EXIT_SUCCESS);
