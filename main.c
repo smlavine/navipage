@@ -41,7 +41,7 @@
 /*
  * To be used as an argument to add_file().
  */
-enum {
+enum states {
 	NO_RECURSE = 0,
 	RECURSE = 1,
 };
