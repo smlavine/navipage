@@ -285,22 +285,20 @@ add_file(const char *path, int recurse)
 }
 
 /*
- * Move by 'offset' buffers in the buffer list. If the operation is
- * successful, that is, the new value is in the range of possible indices,
- * then 0 is returned; otherwise, the value that bufl.n would have been set
- * to is returned.
+ * Move to the 0-indexed 'new'-th buffer. That is, change_buffer(0) will switch
+ * to the first buffer, etc. If the operation is successful, meaning the new
+ * value is in the range of possible indices, then 0 is returned; otherwise,
+ * the value that bufl.n would have been set to is returned.
  */
 static int
-change_buffer(int offset)
+change_buffer(int new)
 {
-	int tmp;
-	tmp = bufl.n + offset;
-	if (tmp >= 0 && tmp < bufl.amt) {
-		bufl.n = tmp;
+	if (new >= 0 && new < bufl.amt) {
+		bufl.n = new;
 		display_buffer(&bufl.v[bufl.n]);
 		return 0;
 	} else {
-		return tmp;
+		return new;
 	}
 }
 
@@ -576,7 +574,7 @@ input_loop(void)
 			break;
 		case 'h':
 			/* Move to the next-most-recent buffer. */
-			change_buffer(-1);
+			change_buffer(bufl.n - 1);
 			break;
 		case 'i':
 			info();
@@ -593,7 +591,7 @@ input_loop(void)
 			break;
 		case 'l':
 			/* Move to the next-less-recent buffer. */
-			change_buffer(1);
+			change_buffer(bufl.n + 1);
 			break;
 		case 'q':
 			quit(EXIT_SUCCESS);
