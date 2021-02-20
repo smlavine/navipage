@@ -1,5 +1,5 @@
 # navipage version
-VERSION = 0.5.6
+VERSION = 0.5.7
 
 # paths
 PREFIX = /usr
