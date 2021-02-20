@@ -47,6 +47,14 @@ enum {
 };
 
 /*
+ * Used for certain non-obvious input keys used in input_loop().
+ */
+enum key {
+	CTRL_E = '\005', /* Scroll wheel down in st and other terminals. */
+	CTRL_Y = '\031', /* Scroll wheel up. */
+};
+
+/*
  * A file buffer. This contains the actual text of the file, but also
  * pointers to the line breaks of the file, which come into use when the file
  * is being scrolled through.
@@ -574,12 +582,12 @@ input_loop(void)
 			info();
 			break;
 		case 'j':
-		case '\005': /* scroll down (^E) */
+		case CTRL_E:
 			/* Scroll down one line. */
 			scroll(1);
 			break;
 		case 'k':
-		case '\031': /* scroll up (^Y) */
+		case CTRL_Y:
 			/* Scroll up one line. */
 			scroll(-1);
 			break;
