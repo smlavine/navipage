@@ -167,8 +167,8 @@ static const char *USAGE =
 "    -h  Print this help and exit.\n"
 "    -r  Infinitely recurse in directories.\n"
 "    -s  If $NAVIPAGE_SH is set, run it as a\n"
-"        shell script before files are read.\n";
-"    -v  See -h.\n"
+"        shell script before files are read.\n"
+"    -v  See -h.\n";
 
 /*
  * Append the given file path to filel. If the file is a directory, and
