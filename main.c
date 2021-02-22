@@ -161,7 +161,7 @@ static const char *USAGE =
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "This program is free software (GPLv3+); see 'man navipage'\n"
 "or <github.com/smlavine/navipage> for more information.\n"
-"Usage: navipage [-dhrv] files...\n"
+"Usage: navipage [-dhrsv] files...\n"
 "Options:\n"
 "    -d  Enable debug output.\n"
 "    -h  Print this help and exit.\n"

@@ -4,7 +4,7 @@ navipage - multi-file pager for watching YouTube videos
 
 # SYNOPSIS
 
-**navipage** \[**-dhrv**\] \[_files_...\]
+**navipage** \[**-dhrsv**\] \[_files_...\]
 
 # DESCRIPTION
 
