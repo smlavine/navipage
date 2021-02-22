@@ -168,6 +168,7 @@ static const char *USAGE =
 "    -r  Infinitely recurse in directories.\n"
 "    -s  If $NAVIPAGE_SH is set, run it as a\n"
 "        shell script before files are read.\n";
+"    -v  See -h.\n"
 
 /*
  * Append the given file path to filel. If the file is a directory, and
@@ -746,6 +747,7 @@ main(int argc, char *argv[])
 			flags.debug = 1;
 			break;
 		case 'h':
+		case 'v':
 			usage();
 			exit(EXIT_SUCCESS);
 			break;

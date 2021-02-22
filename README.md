@@ -22,7 +22,7 @@ Option | Action
 -h     | Print usage information and exit.
 -r     | Infinitely recurse in directories.
 -s     | If **$NAVIPAGE_SH** is set, run it as a shell script before files are read.
--v     | Print version and exit.
+-v     | See -h.
 
 # USAGE
 
