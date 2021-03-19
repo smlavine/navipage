@@ -4,7 +4,7 @@ navipage - multi-file pager for watching YouTube videos
 
 # SYNOPSIS
 
-**navipage** \[**-dhrv**\] \[_files_...\]
+**navipage** \[**-dhrsv**\] \[_files_...\]
 
 # DESCRIPTION
 
@@ -22,7 +22,7 @@ Option | Action
 -h     | Print usage information and exit.
 -r     | Infinitely recurse in directories.
 -s     | If **$NAVIPAGE_SH** is set, run it as a shell script before files are read.
--v     | Print version and exit.
+-v     | See -h.
 
 # USAGE
 
@@ -46,10 +46,12 @@ Key           | Action
 g             | Scroll to the top of the file.
 G             | Scroll to the bottom of the file.
 h             | Move one buffer to the left.
+H             | Move to the first buffer.
 i             | Display help information (through 'man navipage')
 j / MouseDown | Scroll down one line.
 k / MouseUp   | Scroll up one line.
 l             | Move one buffer to the right.
+L             | Move to the last buffer.
 q             | Quit navipage.
 r             | Redraw the buffer.
 !             | Execute a command with sh.

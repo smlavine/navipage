@@ -42,7 +42,7 @@
 /*
  * To be used as an argument to add_file().
  */
-enum {
+enum states {
 	NO_RECURSE = 0,
 	RECURSE = 1,
 };
@@ -80,6 +80,14 @@ typedef struct {
 	 */
 	int current;
 } Search;
+
+/*
+ * Used for certain non-obvious input keys used in input_loop().
+ */
+enum key {
+	CTRL_E = '\005', /* Scroll wheel down in st and other terminals. */
+	CTRL_Y = '\031', /* Scroll wheel up. */
+};
 
 /*
  * A file buffer. This contains the actual text of the file, but also
@@ -194,18 +202,18 @@ int rows;
 static const char *REVERSE_VIDEO = "\033[07m";
 
 static const char *USAGE =
-"navipage - multi-file pager for watching YouTube videos\n"
+"navipage v" VERSION "\n"
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "This program is free software (GPLv3+); see 'man navipage'\n"
 "or <github.com/smlavine/navipage> for more information.\n"
-"Usage: navipage [-dhrv] files...\n"
+"Usage: navipage [-dhrsv] files...\n"
 "Options:\n"
 "    -d  Enable debug output.\n"
 "    -h  Print this help and exit.\n"
 "    -r  Infinitely recurse in directories.\n"
 "    -s  If $NAVIPAGE_SH is set, run it as a\n"
 "        shell script before files are read.\n"
-"    -v  Print version and exit.\n";
+"    -v  See -h.\n";
 
 /*
  * Append the given file path to filel. If the file is a directory, and
@@ -323,22 +331,20 @@ add_file(const char *path, int recurse)
 }
 
 /*
- * Move by 'offset' buffers in the buffer list. If the operation is
- * successful, that is, the new value is in the range of possible indices,
- * then 0 is returned; otherwise, the value that bufl.n would have been set
- * to is returned.
+ * Move to the 0-indexed 'new'-th buffer. That is, change_buffer(0) will switch
+ * to the first buffer, etc. If the operation is successful, meaning the new
+ * value is in the range of possible indices, then 0 is returned; otherwise,
+ * the value that bufl.n would have been set to is returned.
  */
 static int
-change_buffer(int offset)
+change_buffer(int new)
 {
-	int tmp;
-	tmp = bufl.n + offset;
-	if (tmp >= 0 && tmp < bufl.amt) {
-		bufl.n = tmp;
+	if (new >= 0 && new < bufl.amt) {
+		bufl.n = new;
 		display_buffer(&bufl.v[bufl.n]);
 		return 0;
 	} else {
-		return tmp;
+		return new;
 	}
 }
 
@@ -631,27 +637,35 @@ input_loop(void)
 			break;
 		case 'h':
 			/* Move to the next-most-recent buffer. */
-			change_buffer(-1);
+			change_buffer(bufl.n - 1);
+			break;
+		case 'H':
+			/* Move to the first buffer. */
+			change_buffer(0);
 			break;
 		case 'i':
 			info();
 			break;
 		case 'j':
-		case '\005': /* scroll down (^E) */
+		case CTRL_E:
 			/* Scroll down one line. */
 			scroll(1);
 			break;
 		case 'k':
-		case '\031': /* scroll up (^Y) */
+		case CTRL_Y:
 			/* Scroll up one line. */
 			scroll(-1);
 			break;
 		case 'l':
 			/* Move to the next-less-recent buffer. */
-			change_buffer(1);
+			change_buffer(bufl.n + 1);
+			break;
+		case 'L':
+			/* Move to the last buffer. */
+			change_buffer(bufl.amt - 1);
 			break;
 		case 'q':
-			quit(0);
+			quit(EXIT_SUCCESS);
 			break;
 		case 'r':
 			redraw();
@@ -887,6 +901,7 @@ main(int argc, char *argv[])
 			flags.debug = 1;
 			break;
 		case 'h':
+		case 'v':
 			usage();
 			exit(EXIT_SUCCESS);
 			break;
@@ -895,10 +910,6 @@ main(int argc, char *argv[])
 			break;
 		case 's':
 			flags.sh = 1;
-			break;
-		case 'v':
-			printf("navipage version %s\n", VERSION);
-			exit(EXIT_SUCCESS);
 			break;
 		case ':':
 		case '?':

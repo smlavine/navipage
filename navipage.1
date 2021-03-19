@@ -5,7 +5,7 @@ navipage \- multi-file pager for watching YouTube videos
 
 .SH SYNOPSIS
 .B navipage
-.RB [ \-dhrv ]
+.RB [ \-dhrsv ]
 .RI [ files ...]
 
 .SH DESCRIPTION
@@ -37,7 +37,7 @@ If
 is set, run it as a shell script before files are read.
 .TP
 .B \-v
-Print version and exit.
+See -h.
 
 .SH USAGE
 .B navipage
@@ -81,6 +81,9 @@ Scroll to the bottom of the file.
 .B h
 Move one buffer to the left.
 .TP
+.B H
+Move to the first buffer.
+.TP
 .B i
 Display help information (through
 .BR "man navipage" )
@@ -93,6 +96,9 @@ Scroll up one line.
 .TP
 .B l
 Move one buffer to the right.
+.TP
+.B L
+Move to the last buffer.
 .TP
 .B q
 Quit
