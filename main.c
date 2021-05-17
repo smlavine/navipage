@@ -160,7 +160,7 @@ static const char *USAGE =
 "navipage v" VERSION "\n"
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "This program is free software (GPLv3+); see 'man navipage'\n"
-"or <github.com/smlavine/navipage> for more information.\n"
+"or <https://sr.ht/~smlavine/navipage> for more information.\n"
 "Usage: navipage [-dhrsv] files...\n"
 "Options:\n"
 "    -d  Enable debug output.\n"
@@ -454,7 +454,7 @@ execute_command(void)
  * being tried if the first fails:
  * 1. man navipage
  * 2. less README.md
- * 3. Displaying a link to https://github.com/smlavine/navipage
+ * 3. Displaying a link to https://sr.ht/~smlavine/navipage
  */
 static void
 info(void)
@@ -467,7 +467,7 @@ info(void)
 	if (ret != 0) {
 		gotoxy(1, rows);
 		setColor(YELLOW);
-		fputs("See <https://github.com/smlavine/navipage> for help.",
+		fputs("See <https://sr.ht/~smlavine/navipage> for help.",
 				stdout);
 		resetColor();
 		fflush(stdout);

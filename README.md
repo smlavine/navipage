@@ -86,7 +86,7 @@ serverdir="backups"
 ```
 # INSPIRATION
 
-My original plan with [**omnavi**](https://github.com/smlavine/omnavi) was to
+My original plan with [**omnavi**](https://sr.ht/~smlavine/omnavi) was to
 receive an email every morning with my YouTube subscriptions. This works
 reasonably well, however it is not perfect.  In particular, it is too
 cumbersome to see videos that were uploaded on previous days (this requires
@@ -123,14 +123,13 @@ along with navipage. If not, see <https://www.gnu.org/licenses/>.
 
 # QUESTIONS, QUERIES, POSERS, CONCERNS, THINGS THAT HAUNT YOU IN THE NIGHT
 
-To contact me regarding **navipage**, [make an issue on the GitHub page](https://github.com/smlavine/navipage/issues).
-
-Alternatively, email me directly at *mail@smlavine.com*.
+To discuss **navipage**, suggest features, or report bugs, use the public
+mailing list at [](https://lists.sr.ht/~smlavine/navipage).
 
 # SEE ALSO
 
 For more information on **navipage**, see
-<https://github.com/smlavine/navipage>.
+<https://sr.ht/~smlavine/navipage>.
 
 For information on the companion project **omnavi**, see
-<https://github.com/smlavine/omnavi>.
+<https://sr.ht/~smlavine/omnavi>.
