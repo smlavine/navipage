@@ -124,7 +124,7 @@ along with navipage. If not, see <https://www.gnu.org/licenses/>.
 # QUESTIONS, QUERIES, POSERS, CONCERNS, THINGS THAT HAUNT YOU IN THE NIGHT
 
 To discuss **navipage**, suggest features, or report bugs, use the public
-mailing list at [](https://lists.sr.ht/~smlavine/navipage).
+mailing list at <https://lists.sr.ht/~smlavine/navipage>.
 
 # SEE ALSO
 
