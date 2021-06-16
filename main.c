@@ -37,7 +37,7 @@
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 /*
- * Used as an argument to add_file().
+ * Used as an argument to add_path().
  */
 enum states {
 	NO_RECURSE = 0,
@@ -123,7 +123,8 @@ typedef struct {
 	unsigned int sh:1;
 } Flags;
 
-static int add_file(const char *, int);
+static int add_directory(const char *, const int);
+static int add_path(const char *, const int);
 static int change_buffer(int);
 static void cleanup(void);
 static int cmpfilestring(const void *, const void *);
@@ -165,21 +166,70 @@ static const char *USAGE =
 "    -v  See -h.\n";
 
 /*
- * Append the given file path to filel. If the file is a directory, and
- * recurse is nonzero, then all files will be added to filel by calling this
- * function recursively -- but it will only recurse one directory level deep
- * unless flags.recurse_more is set.
- * Return value shall be 0 on success, and -1 on error. Upon irreconciliable
- * errors, such as running out of memory, the program shall be exited with
- * code EXIT_FAILURE.
+ * Append the files in the directory called path to filel. Return value shall
+ * be 0 on success, and -1 on error. Upon irreconciliable errors, such as
+ * running out of memory, the program shall be exited with code EXIT_FAILURE.
  */
 static int
-add_file(const char *path, int recurse)
+add_directory(const char *path, const int recurse)
 {
 	int errsv;
 	struct dirent *d;
 	DIR *dirp;
 	char *newpath;
+
+	dirp = opendir(path);
+	if (dirp == NULL) {
+		errsv = errno;
+		fprintf(stderr, "%s: cannot opendir '%s': %s\n",
+				argv0, path, strerror(errsv));
+		return -1;
+	}
+
+	/* We need to reset errno here, because it is the only way to
+	 * to determine if readdir() errors out, or finishes
+	 * successfully.
+	 */
+	errno = 0;
+	while ((d = readdir(dirp)) != NULL) {
+		/* If we do not exclude these (the current and one-up
+		 * directories), then they will recurse unto themselves,
+		 * creating many repeats in the list.
+		 */
+		if (strcmp(d->d_name, ".") == 0 ||
+				strcmp(d->d_name, "..") == 0) {
+			continue;
+		}
+
+		const int newpathlen = strlen(path) + strlen(d->d_name) + 2;
+		newpath = malloc(newpathlen*sizeof(char));
+		sprintf(newpath, "%s/%s", path, d->d_name);
+
+		add_path(newpath, recurse);
+
+		free(newpath);
+	}
+	closedir(dirp);
+	if ((errsv = errno) != 0) {
+		fprintf(stderr, "%s: stopping readdir '%s': %s\n",
+				argv0, path, strerror(errsv));
+		return -1;
+	}
+
+	return 0;
+}
+
+/*
+ * Append the file at path to filel. If path is a directory, and recurse is
+ * nonzero, then all files in path will be added to filel through
+ * add_directory(). Return value shall be 0 on success, and -1 on error. Upon
+ * irreconciliable errors, such as running out of memory, the program shall be
+ * exited with code EXIT_FAILURE.
+ */
+static int
+add_path(const char *path, const int recurse)
+{
+	int errsv;
 	struct stat statbuf;
 
 	if (stat(path, &statbuf) == -1) {
@@ -188,59 +238,13 @@ add_file(const char *path, int recurse)
 				argv0, path, strerror(errsv));
 		return -1;
 	} else if (S_ISDIR(statbuf.st_mode)) {
-
-		if (!recurse) {
-			fprintf(stderr, "%s: -r not specified; omitting directory '%s'\n",
+		if (recurse) {
+			return add_directory(path, recurse);
+		} else {
+			fprintf(stderr, "%s: no -r; omitting directory '%s'\n",
 					argv0, path);
 			return -1;
 		}
-
-		dirp = opendir(path);
-		if (dirp == NULL) {
-			errsv = errno;
-			fprintf(stderr, "%s: cannot opendir '%s': %s\n",
-					argv0, path, strerror(errsv));
-			return -1;
-		}
-
-		/* We need to set errno here, because it is the only way to
-		 * to determine if readdir() errors out, or finishes
-		 * successfully.
-		 */
-		errno = 0;
-		while ((d = readdir(dirp)) != NULL) {
-			/* If we do not exclude these (the current and one-up
-			 * directories), then they will recurse unto themselves,
-			 * creating many repeats in the list.
-			 */
-			if (strcmp(d->d_name, ".") == 0 ||
-					strcmp(d->d_name, "..") == 0) {
-				continue;
-			}
-
-			/* +2 is for '/' and '\0'. */
-			newpath =
-				malloc(strlen(path)+2+strlen(d->d_name)*sizeof(char));
-			sprintf(newpath, "%s", path);
-			if (path[strlen(path) - 1] != '/') {
-				/* Add strlen(newpath) here so that the original part
-				 * of newpath -- the directory path -- is not
-				 * overwritten.
-				 */
-				sprintf(newpath+strlen(newpath), "/");
-			}
-			sprintf(newpath+strlen(newpath), "%s", d->d_name);
-
-			add_file(newpath, flags.recurse_more);
-
-			free(newpath);
-		}
-		closedir(dirp);
-		if ((errsv = errno) != 0) {
-			fprintf(stderr, "%s: stopping readdir '%s': %s\n",
-					argv0, path, strerror(errsv));
-		}
-
 	} else if (!S_ISREG(statbuf.st_mode)) {
 		fprintf(stderr, "%s: cannot read '%s': not a regular file\n",
 				argv0, path);
@@ -252,8 +256,16 @@ add_file(const char *path, int recurse)
 		 * a new pointer.
 		 */
 		while (filel.size < filel.used) {
+			/* This 4 is arbitrary, it just seems like a good
+			 * amount to increment filel.size by, balancing speed
+			 * (adding only sizeof(char *) over and over again
+			 * could be quite slow) and memory (a larger number
+			 * could result in much more memory than needed being
+			 * allocated.
+			 */
 			filel.size += 4*sizeof(char *);
 		}
+
 		/* Make sure that realloc is valid before reallocating the
 		 * filel.
 		 */
@@ -271,6 +283,8 @@ add_file(const char *path, int recurse)
 			outofmem(EXIT_FAILURE);
 		}
 		filel.used += sizeof(char *);
+
+		/* Add the file path! */
 		strcpy(filel.v[filel.amt], path);
 		filel.amt++;
 	}
@@ -790,10 +804,7 @@ main(int argc, char *argv[])
 	 * to filelist.
 	 */
 	if (argc == 0 && (envstr = getenv("NAVIPAGE_DIR")) != NULL) {
-		int recurse_before = flags.recurse_more;
-		flags.recurse_more = 1;
-		add_file(envstr, RECURSE);
-		flags.recurse_more = recurse_before;
+		add_path(envstr, RECURSE);
 		if (filel.amt == 0) {
 			usage();
 			exit(EXIT_FAILURE);
