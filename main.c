@@ -309,10 +309,8 @@ cleanup(void)
 {
 	system("stty sane");
 	showcursor();
-	/* Print a blank line to return shell prompt to the beginning of the
-	 * next line.
-	 */
-	puts("");
+	/* Return the shell prompt to the beginning of the next line. */
+	putchar('\n');
 }
 
 /*
