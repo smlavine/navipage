@@ -125,9 +125,6 @@ typedef struct {
 	unsigned int sh:1;
 } Flags;
 
-/*
- * Function prototypes.
- */
 static int add_file(const char *, int);
 static int change_buffer(int);
 static void cleanup(void);
