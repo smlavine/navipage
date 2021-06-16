@@ -33,8 +33,6 @@
 
 #include "rogueutil.h"
 
-#define outofmem(x)	fprintf(stderr, "%s: error: out of memory\n", argv0);\
-	exit((x));
 #define MAX(A, B)   ((A) > (B) ? (A) : (B))
 #define MIN(A, B)   ((A) < (B) ? (A) : (B))
 
@@ -135,6 +133,7 @@ static void execute_command(void);
 static void info(void);
 static int init_buffer(Buffer *, char *);
 static void input_loop(void);
+static void outofmem(int);
 static void quit(int);
 static void redraw(void);
 static long scroll(int);
@@ -605,6 +604,19 @@ input_loop(void)
 			break;
 		}
 	}
+}
+
+/*
+ * Print a line that we are "out of memory" and exit navipage. This is usually
+ * called in the case of a malloc error.
+ * TODO: Write something better and less ad-hoc than this, using strerror() and
+ * related functions. Maybe just use BSD errx functions?
+ */
+static void
+outofmem(int code)
+{
+	fprintf(stderr, "%s: error: out of memory\n", argv0);
+	exit(code);
 }
 
 /*
