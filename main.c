@@ -128,7 +128,7 @@ static int add_directory(const char *, const int);
 static int add_path(const char *, const int);
 static int change_buffer(int);
 static void cleanup(void);
-static int cmpfilestring(const void *, const void *);
+static int compare_path_basenames(const void *, const void *);
 static void display_buffer(Buffer *);
 static void error_buffer(Buffer *, const char *, ...);
 static void execute_command(void);
@@ -325,45 +325,37 @@ cleanup(void)
 }
 
 /*
- * To be called by qsort. Sorts two strings, but only sorts the basename of
- * the path.
+ * Compares two file paths by their basename. Of importance to us is that files
+ * named in YYYYMMDD format are compared such that the file named with the
+ * further date is "less than" the other path. Return value shall be the
+ * negative of what strcmp() would return given the basename of the paths.
+ * Upon irreconciliable errors, such as running out of memory, the program
+ * shall be exited with code EXIT_FAILURE.
  */
 static int
-cmpfilestring(const void *p1, const void *p2)
+compare_path_basenames(const void *p1, const void *p2)
 {
 	/* POSIX-compliant basename() may modify the path variable, which we
 	 * don't want. For this reason, we copy the string before passing it to
 	 * basename().
 	 */
-	char *base1, *base2, *copy1, *copy2;
-	int ret;
+	char *base[2], *copy[2];
 	
-	/* To quote 'man 3 qsort' on the reasoning for these casts:
-	 * "The actual arguments to this function are "pointers to pointers to
-	 * char", but strcmp(3) arguments are "pointers to char", hence the
-	 * following cast plus dereference"
-	 * This also applies to strlen.
+	/* p1 and p2 are pointers to pointers to char, but strcmp() arguments
+	 * are "pointers to char", hence the following cast plus dereference.
+	 * (Paraphrasing `man 3 qsort`)
 	 */
-	copy1 = malloc((1+strlen(*(const char **)p1))*sizeof(char));
-	copy2 = malloc((1+strlen(*(const char **)p2))*sizeof(char));
-	if (copy1 == NULL || copy2 == NULL) {
-		outofmem(EXIT_FAILURE);
-	}
+	copy[0] = strdup(*(const char **)p1);
+	copy[1] = strdup(*(const char **)p2);
+	if (copy[0] == NULL || copy[1] == NULL) outofmem(EXIT_FAILURE);
 
-	strcpy(copy1, *(const char **)p1);
-	strcpy(copy2, *(const char **)p2);
-	base1 = basename(copy1);
-	base2 = basename(copy2);
+	base[0] = basename(copy[0]);
+	base[1] = basename(copy[1]);
 
-	/* Note the negation here. This will sort the list with the most recent
-	 * file at the start.
-	 */
-	ret = -strcmp(base1, base2);
+	free(copy[0]);
+	free(copy[1]);
 
-	free(copy1);
-	free(copy2);
-
-	return ret;
+	return -strcmp(base[0], base[1]);
 }
 
 /*
@@ -827,10 +819,7 @@ main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	/* Sort files such that the start of the list is the newest file --
-	 * assuming that they are named like YYYYMMDD[...].
-	 */
-	qsort(filel.v, filel.amt, sizeof(char *), cmpfilestring);
+	qsort(filel.v, filel.amt, sizeof(char *), compare_path_basenames);
 
 	/*
 	 * Now we can begin working with buffers.
