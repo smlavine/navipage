@@ -763,6 +763,10 @@ main(int argc, char *argv[])
 		}
 	}
 
+	/* See shell's `shift`. */
+	argc -= optind;
+	argv += optind;
+
 	/* If -s was specified, look for $NAVIPAGE_SH. If it exists, run it as a
 	 * shell script.
 	 */
@@ -775,11 +779,6 @@ main(int argc, char *argv[])
 		system(cmd);
 		free(cmd);
 	}
-
-
-	/* Set argc/argv to remaining arguments. */
-	argc -= optind;
-	argv += optind;
 
 	/* If NAVIPAGE_DIR is set, read all files in it (if it is a directory)
 	 * to filelist.
