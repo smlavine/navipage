@@ -295,9 +295,9 @@ change_buffer(int new)
 		bufl.n = new;
 		display_buffer(&bufl.v[bufl.n]);
 		return 0;
-	} else {
-		return new;
 	}
+
+	return new;
 }
 
 /*
