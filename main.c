@@ -813,7 +813,7 @@ main(int argc, char *argv[])
 
 	/* All remaining arguments should be paths to files to be read. */
 	for (i = 0; i < argc; i++) {
-		add_file(argv[i], RECURSE);
+		add_path(argv[i], flags.recurse_more);
 	}
 
 	/* Exit the program if there are no files to read. */
