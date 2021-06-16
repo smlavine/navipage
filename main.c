@@ -188,57 +188,57 @@ add_file(const char *path, int recurse)
 				argv0, path, strerror(errsv));
 		return -1;
 	} else if (S_ISDIR(statbuf.st_mode)) {
-		if (recurse) {
-			/* Recurse upon the directory. */
-			dirp = opendir(path);
-			if (dirp == NULL) {
-				errsv = errno;
-				fprintf(stderr, "%s: cannot opendir '%s': %s\n",
-						argv0, path, strerror(errsv));
-				return -1;
-			} else {
-				/* We need to set errno here, because it is the only way to
-				 * to determine if readdir() errors out, or finishes
-				 * successfully.
-				 */
-				errno = 0;
-				while ((d = readdir(dirp)) != NULL) {
-					/* If we do not exclude these (the current and one-up
-					 * directories), then they will recurse unto themselves,
-					 * creating many repeats in the list.
-					 */
-					if (strcmp(d->d_name, ".") == 0 ||
-							strcmp(d->d_name, "..") == 0) {
-						continue;
-					}
 
-					/* +2 is for '/' and '\0'. */
-					newpath =
-						malloc(strlen(path)+2+strlen(d->d_name)*sizeof(char));
-					sprintf(newpath, "%s", path);
-					if (path[strlen(path) - 1] != '/') {
-						/* Add strlen(newpath) here so that the original part
-						 * of newpath -- the directory path -- is not
-						 * overwritten.
-						 */
-						sprintf(newpath+strlen(newpath), "/");
-					}
-					sprintf(newpath+strlen(newpath), "%s", d->d_name);
-
-					add_file(newpath, flags.recurse_more);
-
-					free(newpath);
-				}
-				closedir(dirp);
-				if ((errsv = errno) != 0) {
-					fprintf(stderr, "%s: stopping readdir '%s': %s\n",
-							argv0, path, strerror(errsv));
-				}
-			}
-		} else {
+		if (!recurse) {
 			fprintf(stderr, "%s: -r not specified; omitting directory '%s'\n",
 					argv0, path);
 			return -1;
+		}
+
+		dirp = opendir(path);
+		if (dirp == NULL) {
+			errsv = errno;
+			fprintf(stderr, "%s: cannot opendir '%s': %s\n",
+					argv0, path, strerror(errsv));
+			return -1;
+		}
+
+		/* We need to set errno here, because it is the only way to
+		 * to determine if readdir() errors out, or finishes
+		 * successfully.
+		 */
+		errno = 0;
+		while ((d = readdir(dirp)) != NULL) {
+			/* If we do not exclude these (the current and one-up
+			 * directories), then they will recurse unto themselves,
+			 * creating many repeats in the list.
+			 */
+			if (strcmp(d->d_name, ".") == 0 ||
+					strcmp(d->d_name, "..") == 0) {
+				continue;
+			}
+
+			/* +2 is for '/' and '\0'. */
+			newpath =
+				malloc(strlen(path)+2+strlen(d->d_name)*sizeof(char));
+			sprintf(newpath, "%s", path);
+			if (path[strlen(path) - 1] != '/') {
+				/* Add strlen(newpath) here so that the original part
+				 * of newpath -- the directory path -- is not
+				 * overwritten.
+				 */
+				sprintf(newpath+strlen(newpath), "/");
+			}
+			sprintf(newpath+strlen(newpath), "%s", d->d_name);
+
+			add_file(newpath, flags.recurse_more);
+
+			free(newpath);
+		}
+		closedir(dirp);
+		if ((errsv = errno) != 0) {
+			fprintf(stderr, "%s: stopping readdir '%s': %s\n",
+					argv0, path, strerror(errsv));
 		}
 
 	} else if (!S_ISREG(statbuf.st_mode)) {
