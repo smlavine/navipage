@@ -229,8 +229,7 @@ add_file(const char *path, int recurse)
 					}
 					sprintf(newpath+strlen(newpath), "%s", d->d_name);
 
-					add_file(newpath,
-							flags.recurse_more ? RECURSE : NO_RECURSE);
+					add_file(newpath, flags.recurse_more);
 
 					free(newpath);
 				}
