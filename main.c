@@ -146,8 +146,6 @@ static void scroll_to_bottom(void);
 static void update_rows(void);
 static void usage(void);
 
-
-extern char **environ;
 /* Name of the program, as it is executed by the user. This is declared here
  * because argv[0] is going to be modiifed by getopt.
  */
@@ -768,17 +766,14 @@ main(int argc, char *argv[])
 	/* If -s was specified, look for $NAVIPAGE_SH. If it exists, run it as a
 	 * shell script.
 	 */
-	if (flags.sh) {
-		for (i = 0; (envstr = environ[i]) != NULL; i++) {
-			if (strstr(envstr, "NAVIPAGE_SH=") == envstr &&
-					(envstr = strchr(envstr, '=') + 1)[0] != '\0') {
-				/* Execute the shell script. */
-				const char *cmd = "sh ";
-				char fullcmd[strlen(cmd) + strlen(envstr) + 1];
-				sprintf(fullcmd, "%s%s", cmd, envstr);
-				system(fullcmd);
-			}
-		}
+	if (flags.sh && (envstr = getenv("NAVIPAGE_SH")) != NULL) {
+		const char *shell = "/bin/sh";
+		const int cmdlen = strlen(envstr) + strlen(shell) + 2;
+		char *cmd = malloc(cmdlen*sizeof(char));
+		if (cmd == NULL) outofmem(EXIT_FAILURE);
+		snprintf(cmd, cmdlen, "%s %s", shell, envstr);
+		system(cmd);
+		free(cmd);
 	}
 
 
@@ -786,19 +781,14 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (argc == 0) {
-		/* If NAVIPAGE_DIR is set, read all files in it (if it is a directory)
-		 * to filelist.
-		 */
-		for (i = 0; (envstr = environ[i]) != NULL; i++) {
-			if (strstr(envstr, "NAVIPAGE_DIR=") == envstr &&
-					(envstr = strchr(envstr, '=') + 1)[0] != '\0') {
-				int recurse_before = flags.recurse_more;
-				flags.recurse_more = 1;
-				add_file(envstr, RECURSE);
-				flags.recurse_more = recurse_before;
-			}
-		}
+	/* If NAVIPAGE_DIR is set, read all files in it (if it is a directory)
+	 * to filelist.
+	 */
+	if (argc == 0 && (envstr = getenv("NAVIPAGE_DIR")) != NULL) {
+		int recurse_before = flags.recurse_more;
+		flags.recurse_more = 1;
+		add_file(envstr, RECURSE);
+		flags.recurse_more = recurse_before;
 		if (filel.amt == 0) {
 			usage();
 			exit(EXIT_FAILURE);
