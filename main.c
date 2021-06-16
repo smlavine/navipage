@@ -67,8 +67,8 @@ typedef struct {
 	/* The amount of space allocated for the file. */
 	int size;
 
-	/* An array of pointers to the first character of every line. This is used
-	 * in scrolling.
+	/* An array of pointers to the first character of every line. This is
+	 * used in scrolling.
 	 */
 	char **st;
 
@@ -78,8 +78,9 @@ typedef struct {
 	/* The amount of space allocated for st. */
 	int st_size;
 
-	/* The variable such that st[top] points to the start of the line that is
-	 * drawn at the top of the screen. It changes when the screen is scrolled.
+	/* The variable such that st[top] points to the start of the line that
+	 * is drawn at the top of the screen. It changes when the screen is
+	 * scrolled.
 	 */
 	int top;
 } Buffer;
@@ -330,8 +331,8 @@ cleanup(void)
 static int
 cmpfilestring(const void *p1, const void *p2)
 {
-	/* POSIX-compliant basename() may modify the path variable, which we don't
-	 * want. For this reason, we copy the string before passing it to
+	/* POSIX-compliant basename() may modify the path variable, which we
+	 * don't want. For this reason, we copy the string before passing it to
 	 * basename().
 	 */
 	char *base1, *base2, *copy1, *copy2;
@@ -383,9 +384,9 @@ display_buffer(Buffer *b)
 	 */
 	linestoprint = MIN(b->st_amt, rows - 1);
 	for (i = 0; i < linestoprint; i++) {
-		/* Find the location of the end of the line, or if an eol cannot be
-		 * found, then it is the last line in the file and we should find the
-		 * eof.
+		/* Find the location of the end of the line, or if an eol
+		 * cannot be found, then it is the last line in the file and we
+		 * should find the eof.
 		 */
 		if ((eolptr = strchr(b->st[b->top + i], '\n')) == NULL) {
 			eolptr = strchr(b->st[b->top + i], '\0');
@@ -398,7 +399,8 @@ display_buffer(Buffer *b)
 	/* Print status-bar information. */
 	gotoxy(1, rows);
 	printf("#%d/%d  %s  %s",
-			bufl.n + 1, bufl.amt, filel.v[bufl.n], "Press 'i' for help.");
+			bufl.n + 1, bufl.amt, filel.v[bufl.n],
+			"Press 'i' for help.");
 	fflush(stdout);
 }
 
@@ -440,8 +442,8 @@ execute_command(void)
 		system(line);
 	}
 	gotoxy(1, rows);
-	/* The command could change the color of text, so we should re-set it here
-	 * in addition to above.
+	/* The command could change the color of text, so we should re-set it
+	 * here in addition to above.
 	 */
 	setColor(YELLOW);
 	fputs("navipage: press any key to return.", stdout);
@@ -489,9 +491,10 @@ init_buffer(Buffer *b, char *path)
 	FILE *fp;
 	size_t i;
 
-	/* Each condition completes a task that I need to do to read the file into
-	 * the buffer, and also checks if it succeeded. If the condition is true,
-	 * then the function failed, and the error is handled accordingly.
+	/* Each condition completes a task that I need to do to read the file
+	 * into the buffer, and also checks if it succeeded. If the condition
+	 * is true, then the function failed, and the error is handled
+	 * accordingly.
 	 */
 	if ((fp = fopen(path, "r")) == NULL) {
 		error_buffer(b, "%s: cannot fopen '%s': %s\n",
@@ -507,10 +510,10 @@ init_buffer(Buffer *b, char *path)
 		return -1;
 	}
 
-	/* b->length must be assigned here because it is of type size_t, which is
-	 * unsigned, and therefore cannot be -1. Because of this, -1 cannot be
-	 * checked for to detect an error. Therefore it is assigned here, once
-	 * we are sure there is not an error with ftell().
+	/* b->length must be assigned here because it is of type size_t, which
+	 * is unsigned, and therefore cannot be -1. Because of this, -1 cannot
+	 * be checked for to detect an error. Therefore it is assigned here,
+	 * once we are sure there is not an error with ftell().
 	 */
 	b->length = (size_t)ftell(fp);
 	rewind(fp);
@@ -538,21 +541,23 @@ init_buffer(Buffer *b, char *path)
 	}
 
 	/* We will incrememnt memory in blocks of 10. That is, every time we
-	 * reallocate memory because there is not enough room, we will add enough
-	 * memory to fit ten more char pointers.
+	 * reallocate memory because there is not enough room, we will add
+	 * enough memory to fit ten more char pointers.
 	 */
 	if ((b->st = malloc((b->st_size = 10)*sizeof(char *))) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
-	/* The first line starts at the first character of the text, so we start
-	 * there.
+	/* The first line starts at the first character of the text, so we
+	 * start there.
 	 */
 	b->st[0] = b->text;
 	b->st_amt = 1;
 	for (i = 1; i < b->length; i++) {
 		if (b->text[i - 1] == '\n') {
 			if (b->st_amt >= b->st_size) {
-				b->st = realloc(b->st, (b->st_size += 10)*sizeof(char *));
+				b->st_size += 10;
+				b->st = realloc(b->st,
+						b->st_size*sizeof(char *));
 				if (b->st == NULL) {
 					outofmem(EXIT_FAILURE);
 				}
@@ -677,14 +682,15 @@ scroll(int offset)
 {
 	int tmp;
 	tmp = bufl.v[bufl.n].top + offset;
-	/* tmp is the "new" line index. Compare it to see that it is less than the
-	 * amount of lines, minus the amount of rows because top is of course at
-	 * the top of the screen and, the end of the file will be at the bottom,
-	 * and add 1 to that number because we do not print on the bottom-most
-	 * line of the screen (that is for status information like the current
-	 * buffer), and 1 more because st_amt is 1-indexed while tmp is 0-indexed.
-	 * The second comparison is much simpler; simply see that the top of the
-	 * screen does not scroll behind the start of the file.
+	/* tmp is the "new" line index. Compare it to see that it is less than
+	 * the amount of lines, minus the amount of rows because top is of
+	 * course at the top of the screen and, the end of the file will be at
+	 * the bottom, and add 1 to that number because we do not print on the
+	 * bottom-most line of the screen (that is for status information like
+	 * the current buffer), and 1 more because st_amt is 1-indexed while
+	 * tmp is 0-indexed.  The second comparison is much simpler; simply see
+	 * that the top of the screen does not scroll behind the start of the
+	 * file.
 	 */
 	if (tmp < bufl.v[bufl.n].st_amt - rows + 2 && tmp >= 0) {
 		bufl.v[bufl.n].top = tmp;
@@ -787,8 +793,8 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	/* If -s was specified, look for $NAVIPAGE_SH. If it exists, run it as a
-	 * shell script.
+	/* If -s was specified, look for $NAVIPAGE_SH. If it exists, run it as
+	 * a shell script.
 	 */
 	if (flags.sh && (envstr = getenv("NAVIPAGE_SH")) != NULL) {
 		const char *shell = "/bin/sh";
@@ -848,7 +854,8 @@ main(int argc, char *argv[])
 	 */
 
 	/* Disable showing input on the screen while the program runs. This
-	 * prevents all the 'j's and 'k's from showing on the bottom of the screen.
+	 * prevents all the 'j's and 'k's from showing on the bottom of the
+	 * screen.
 	 */
 	system("stty -echo");
 	/*
