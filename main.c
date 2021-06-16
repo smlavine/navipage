@@ -37,7 +37,7 @@
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 /*
- * To be used as an argument to add_file().
+ * Used as an argument to add_file().
  */
 enum states {
 	NO_RECURSE = 0,
