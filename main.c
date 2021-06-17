@@ -121,21 +121,21 @@ typedef struct {
 	unsigned int sh:1;
 } Flags;
 
-static int add_directory(const char *, const int);
-static int add_path(const char *, const int);
-static int change_buffer(int);
+static int add_directory(const char * const, const int);
+static int add_path(const char * const, const int);
+static int change_buffer(const int);
 static void cleanup(void);
 static int compare_path_basenames(const void *, const void *);
-static void display_buffer(Buffer *);
-static void error_buffer(Buffer *, const char *, ...);
+static void display_buffer(const Buffer * const);
+static void error_buffer(Buffer * const, const char *, ...);
 static void execute_command(void);
 static void info(void);
-static int init_buffer(Buffer *, char *);
+static int init_buffer(Buffer * const, const char * const);
 static void input_loop(void);
-static void outofmem(int);
-static void quit(int);
+static void outofmem(const int);
+static void quit(const int);
 static void redraw(void);
-static long scroll(int);
+static long scroll(const int);
 static void scroll_to_top(void);
 static void scroll_to_bottom(void);
 static void update_rows(void);
@@ -169,7 +169,7 @@ static const char *USAGE =
  * running out of memory, the program shall be exited with code EXIT_FAILURE.
  */
 static int
-add_directory(const char *path, const int recurse)
+add_directory(const char * const path, const int recurse)
 {
 	int errsv;
 	struct dirent *d;
@@ -297,7 +297,7 @@ add_path(const char *path, const int recurse)
  * the value that bufl.n would have been set to is returned.
  */
 static int
-change_buffer(int new)
+change_buffer(const int new)
 {
 	if (new >= 0 && new < bufl.amt) {
 		bufl.n = new;
@@ -359,7 +359,7 @@ compare_path_basenames(const void *p1, const void *p2)
  * Display all text from b->st[b->top] to the end of the screen.
  */
 static void
-display_buffer(Buffer *b)
+display_buffer(const Buffer * const b)
 {
 	int i, linestoprint, linelen;
 	char *eolptr;
@@ -397,7 +397,7 @@ display_buffer(Buffer *b)
  * Fill the buffer with an error message designated by the arguments.
  */
 static void
-error_buffer(Buffer *b, const char *format, ...)
+error_buffer(Buffer * const b, const char *format, ...)
 {
 	va_list ap;
 	b->size = 128;
@@ -475,7 +475,7 @@ info(void)
  * top, offset, etc. Returns 0 on success, -1 on error.
  */
 static int
-init_buffer(Buffer *b, char *path)
+init_buffer(Buffer * const b, const char * const path)
 {
 	FILE *fp;
 	size_t i;
@@ -621,7 +621,7 @@ input_loop(void)
  * related functions. Maybe just use BSD errx functions?
  */
 static void
-outofmem(int code)
+outofmem(const int code)
 {
 	fprintf(stderr, "%s: error: out of memory\n", argv0);
 	exit(code);
@@ -631,7 +631,7 @@ outofmem(int code)
  * Quit navipage.
  */
 static void
-quit(int code)
+quit(const int code)
 {
 	cleanup();
 	switch (code) {
@@ -667,7 +667,7 @@ redraw(void)
  * is returned.
  */
 static long
-scroll(int offset)
+scroll(const int offset)
 {
 	int tmp;
 	tmp = bufl.v[bufl.n].top + offset;
