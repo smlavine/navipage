@@ -36,10 +36,7 @@
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
-/*
- * Used as an argument to add_path().
- */
-enum states {
+enum add_path_recurse_argument {
 	NO_RECURSE = 0,
 	RECURSE = 1,
 };
