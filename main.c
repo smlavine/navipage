@@ -742,7 +742,6 @@ main(int argc, char *argv[])
 	signal(SIGSEGV, quit);
 	signal(SIGHUP, quit);
 
-	/* Initialize variables. */
 	argv0 = argv[0];
 	filel.size = 4*sizeof(char *);
 	filel.used = 0;
@@ -778,14 +777,13 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* See shell's `shift`. */
-	argc -= optind;
+	/* Point argv to the first non-option argument, and set argc to the
+	 * amount of arguments remaining.  */
 	argv += optind;
+	argc -= optind;
 
-	/* If -s was specified, look for $NAVIPAGE_SH. If it exists, run it as
-	 * a shell script.
-	 */
 	if (flags.sh && (envstr = getenv("NAVIPAGE_SH")) != NULL) {
+		/* Execute the file at $NAVIPAGE_SH as a shell script. */
 		const char *shell = "/bin/sh";
 		const int cmdlen = strlen(envstr) + strlen(shell) + 2;
 		char *cmd = malloc(cmdlen*sizeof(char));
@@ -795,10 +793,8 @@ main(int argc, char *argv[])
 		free(cmd);
 	}
 
-	/* If NAVIPAGE_DIR is set, read all files in it (if it is a directory)
-	 * to filelist.
-	 */
 	if (argc == 0 && (envstr = getenv("NAVIPAGE_DIR")) != NULL) {
+		/* Add the files at $NAVIPAGE_DIR to filel. */
 		add_path(envstr, RECURSE);
 		if (filel.amt == 0) {
 			usage();
@@ -806,12 +802,12 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* All remaining arguments should be paths to files to be read. */
+	/* All remaining arguments are paths to files to be read. */
 	for (i = 0; i < argc; i++) {
 		add_path(argv[i], flags.recurse_more);
 	}
 
-	/* Exit the program if there are no files to read. */
+	/* Exit the program if no files were read. */
 	if (filel.amt == 0) {
 		exit(EXIT_FAILURE);
 	}
