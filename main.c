@@ -631,10 +631,10 @@ outofmem(int code)
  * Quit navipage.
  */
 static void
-quit(int n)
+quit(int code)
 {
 	cleanup();
-	switch (n) {
+	switch (code) {
 	case SIGINT:
 	case SIGTERM:
 	case SIGQUIT:
@@ -645,7 +645,7 @@ quit(int n)
 		exit(EXIT_FAILURE);
 		break;
 	default:
-		exit(n);
+		exit(code);
 		break;
 	}
 }
