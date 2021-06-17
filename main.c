@@ -685,9 +685,9 @@ scroll(int offset)
 		bufl.v[bufl.n].top = tmp;
 		display_buffer(&bufl.v[bufl.n]);
 		return 0;
-	} else {
-		return tmp;
 	}
+
+	return tmp;
 }
 
 /*
