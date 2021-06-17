@@ -796,10 +796,6 @@ main(int argc, char *argv[])
 	if (argc == 0 && (envstr = getenv("NAVIPAGE_DIR")) != NULL) {
 		/* Add the files at $NAVIPAGE_DIR to filel. */
 		add_path(envstr, RECURSE);
-		if (filel.amt == 0) {
-			usage();
-			exit(EXIT_FAILURE);
-		}
 	}
 
 	/* All remaining arguments are paths to files to be read. */
@@ -809,6 +805,7 @@ main(int argc, char *argv[])
 
 	/* Exit the program if no files were read. */
 	if (filel.amt == 0) {
+		usage();
 		exit(EXIT_FAILURE);
 	}
 
