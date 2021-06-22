@@ -11,7 +11,7 @@ LIBS = -L/usr/lib -lc
 
 # flags
 CPPFLAGS = -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\"
-CFLAGS = -std=c99 -Wall -Wextra -Wpedantic -lreadline $(INCS) $(CPPFLAGS)
+CFLAGS = -ansi -Wall -Wextra -Wpedantic -lreadline $(INCS) $(CPPFLAGS)
 OPTIMFLAGS = -O3
 DEBUGFLAGS = -g -Og
 
