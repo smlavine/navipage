@@ -38,7 +38,7 @@
 
 enum add_path_recurse_argument {
 	NO_RECURSE = 0,
-	RECURSE = 1,
+	RECURSE = 1
 };
 
 /*
@@ -46,7 +46,7 @@ enum add_path_recurse_argument {
  */
 enum key {
 	CTRL_E = '\005', /* Scroll wheel down in st and other terminals. */
-	CTRL_Y = '\031', /* Scroll wheel up. */
+	CTRL_Y = '\031'  /* Scroll wheel up. */
 };
 
 /*
@@ -175,6 +175,7 @@ add_directory(const char * const path, const int recurse)
 	struct dirent *d;
 	DIR *dirp;
 	char *newpath;
+	int newpathlen;
 
 	dirp = opendir(path);
 	if (dirp == NULL) {
@@ -199,7 +200,7 @@ add_directory(const char * const path, const int recurse)
 			continue;
 		}
 
-		const int newpathlen = strlen(path) + strlen(d->d_name) + 2;
+		newpathlen = strlen(path) + strlen(d->d_name) + 2;
 		newpath = malloc(newpathlen*sizeof(char));
 		sprintf(newpath, "%s/%s", path, d->d_name);
 
@@ -228,6 +229,7 @@ static int
 add_path(const char *path, const int recurse)
 {
 	int errsv;
+	char **realloc_check;
 	struct stat statbuf;
 
 	if (stat(path, &statbuf) == -1) {
@@ -267,11 +269,11 @@ add_path(const char *path, const int recurse)
 		/* Make sure that realloc is valid before reallocating the
 		 * filel.
 		 */
-		char **tmp = realloc(filel.v, filel.size);
-		if (tmp == NULL) {
+		realloc_check = realloc(filel.v, filel.size);
+		if (realloc_check == NULL) {
 			outofmem(EXIT_FAILURE);
 		} else {
-			filel.v = tmp;
+			filel.v = realloc_check;
 		}
 
 		/* Allocate space for file path. */
