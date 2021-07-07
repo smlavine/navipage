@@ -18,7 +18,6 @@
 
 #include <dirent.h>
 #include <errno.h>
-#include <getopt.h>
 #include <libgen.h>
 #include <signal.h>
 #include <stdarg.h>
