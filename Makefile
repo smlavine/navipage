@@ -26,7 +26,8 @@ install: navipage
 	cp -f navipage $(PREFIX)/bin
 	chmod 755 $(PREFIX)/bin
 	mkdir -p $(MANPREFIX)/man1
-	sed "s/VERSION/$(VERSION)/g" < navipage.1 > $(MANPREFIX)/man1/navipage.1
+	sed "s/VERSION/$(VERSION)/g;s/OPTSTRING/$(OPTSTRING)/g" < navipage.1 \
+		> $(MANPREFIX)/man1/navipage.1
 	chmod 644 $(MANPREFIX)/man1/navipage.1
 
 uninstall:

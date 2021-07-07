@@ -153,7 +153,7 @@ static const char *USAGE =
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "This program is free software (GPLv3+); see 'man navipage'\n"
 "or <https://sr.ht/~smlavine/navipage> for more information.\n"
-"Usage: navipage [-dhrsv] files...\n"
+"Usage: navipage [-" OPTSTRING "] files...\n"
 "Options:\n"
 "    -d  Enable debug output.\n"
 "    -h  Print this help and exit.\n"
@@ -735,7 +735,6 @@ main(int argc, char *argv[])
 {
 	int c, i;
 	char *envstr;
-	const char *optstring = "dhrsv";
 
 	signal(SIGINT, quit);
 	signal(SIGTERM, quit);
@@ -754,7 +753,7 @@ main(int argc, char *argv[])
 	flags.recurse_more = 0;
 
 	/* Handle options. */
-	while ((c = getopt(argc, argv, optstring)) != -1) {
+	while ((c = getopt(argc, argv, OPTSTRING)) != -1) {
 		switch (c) {
 		case 'd':
 			flags.debug = 1;

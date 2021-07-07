@@ -1,6 +1,9 @@
 # navipage version
 VERSION = 0.6.0
 
+# options that navipage can take
+OPTSTRING = dhrsv
+
 # paths
 PREFIX = /usr
 MANPREFIX = $(PREFIX)/share/man
@@ -10,7 +13,8 @@ INCS = -I. -I/usr/include
 LIBS = -L/usr/lib -lc
 
 # flags
-CPPFLAGS = -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\"
+CPPFLAGS = -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\" \
+	   -DOPTSTRING=\"$(OPTSTRING)\"
 CFLAGS = -ansi -Wall -Wextra -Wpedantic -lreadline $(INCS) $(CPPFLAGS)
 OPTIMFLAGS = -O3
 DEBUGFLAGS = -g -Og
