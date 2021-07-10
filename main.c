@@ -739,7 +739,6 @@ main(int argc, char *argv[])
 	signal(SIGINT, quit);
 	signal(SIGTERM, quit);
 	signal(SIGQUIT, quit);
-	signal(SIGSEGV, quit);
 	signal(SIGHUP, quit);
 
 	argv0 = argv[0];
