@@ -748,8 +748,6 @@ main(int argc, char *argv[])
 		outofmem(EXIT_FAILURE);
 	}
 	update_rows();
-	flags.debug = 0;
-	flags.recurse_more = 0;
 
 	/* Handle options. */
 	while ((c = getopt(argc, argv, OPTSTRING)) != -1) {
