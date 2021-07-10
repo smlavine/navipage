@@ -774,10 +774,11 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* Point argv to the first non-option argument, and set argc to the
-	 * amount of arguments remaining.  */
-	argv += optind;
+	/* Set argc to the amount of arguments remaining, and point argv to the
+	 * first argument after the options.
+	 */
 	argc -= optind;
+	argv += optind;
 
 	if (flags.sh && (envstr = getenv("NAVIPAGE_SH")) != NULL) {
 		/* Execute the file at $NAVIPAGE_SH as a shell script. */
