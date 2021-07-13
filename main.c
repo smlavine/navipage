@@ -121,16 +121,16 @@ typedef struct {
 } Flags;
 
 /* Function prototypes. */
-static int add_directory(const char * const, const int);
-static int add_path(const char * const, const int);
+static int add_directory(const char *const, const int);
+static int add_path(const char *const, const int);
 static int change_buffer(const int);
 static void cleanup(void);
 static int compare_path_basenames(const void *, const void *);
-static void display_buffer(const Buffer * const);
-static void error_buffer(Buffer * const, const char *, ...);
+static void display_buffer(const Buffer *const);
+static void error_buffer(Buffer *const, const char *, ...);
 static void execute_command(void);
 static void info(void);
-static int init_buffer(Buffer * const, const char * const);
+static int init_buffer(Buffer *const, const char *const);
 static void input_loop(void);
 static void outofmem(const int);
 static void quit(const int);
@@ -169,7 +169,7 @@ static const char *USAGE =
  * running out of memory, the program shall be exited with code EXIT_FAILURE.
  */
 static int
-add_directory(const char * const path, const int recurse)
+add_directory(const char *const path, const int recurse)
 {
 	int errsv;
 	struct dirent *d;
@@ -361,7 +361,7 @@ compare_path_basenames(const void *p1, const void *p2)
  * Display all text from b->st[b->top] to the end of the screen.
  */
 static void
-display_buffer(const Buffer * const b)
+display_buffer(const Buffer *const b)
 {
 	int i, linestoprint, linelen;
 	char *eolptr;
@@ -399,7 +399,7 @@ display_buffer(const Buffer * const b)
  * Fill the buffer with an error message designated by the arguments.
  */
 static void
-error_buffer(Buffer * const b, const char *format, ...)
+error_buffer(Buffer *const b, const char *format, ...)
 {
 	va_list ap;
 	b->size = 128;
@@ -477,7 +477,7 @@ info(void)
  * top, offset, etc. Returns 0 on success, -1 on error.
  */
 static int
-init_buffer(Buffer * const b, const char * const path)
+init_buffer(Buffer *const b, const char *const path)
 {
 	FILE *fp;
 	size_t i;
