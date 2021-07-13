@@ -120,6 +120,7 @@ typedef struct {
 	unsigned int sh:1;
 } Flags;
 
+/* Function prototypes. */
 static int add_directory(const char * const, const int);
 static int add_path(const char * const, const int);
 static int change_buffer(const int);
