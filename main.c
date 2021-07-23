@@ -739,7 +739,6 @@ main(int argc, char *argv[])
 {
 	int c, i;
 	char *envstr;
-	const char *optstring = "dhrsv";
 
 	signal(SIGINT, quit);
 	signal(SIGTERM, quit);
@@ -755,7 +754,7 @@ main(int argc, char *argv[])
 	update_rows();
 
 	/* Handle options. */
-	while ((c = getopt(argc, argv, optstring)) != -1) {
+	while ((c = getopt(argc, argv, "dhrsv")) != -1) {
 		switch (c) {
 		case 'd':
 			flags.debug = 1;
