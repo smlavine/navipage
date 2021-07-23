@@ -159,8 +159,7 @@ static const char *USAGE =
 "    -d  Enable debug output.\n"
 "    -h  Print this help and exit.\n"
 "    -r  Infinitely recurse in directories.\n"
-"    -s  If $NAVIPAGE_SH is set, run it as a\n"
-"        shell script before files are read.\n"
+"    -s  Run $NAVIPAGE_SH before reading files.\n"
 "    -v  See -h.\n";
 
 /*
@@ -786,14 +785,8 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	if (flags.sh && (envstr = getenv("NAVIPAGE_SH")) != NULL) {
-		/* Execute the file at $NAVIPAGE_SH as a shell script. */
-		const char *shell = "/bin/sh";
-		const int cmdlen = strlen(envstr) + strlen(shell) + 2;
-		char *cmd = malloc(cmdlen*sizeof(char));
-		if (cmd == NULL) outofmem(EXIT_FAILURE);
-		snprintf(cmd, cmdlen, "%s %s", shell, envstr);
-		system(cmd);
-		free(cmd);
+		/* Run $NAVIPAGE_SH before reading files. */
+		system(envstr);
 	}
 
 	if (argc == 0 && (envstr = getenv("NAVIPAGE_DIR")) != NULL) {
