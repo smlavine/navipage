@@ -450,15 +450,19 @@ execute_command(void)
 /*
  * Display helpful information in the following order, with the next option
  * being tried if the first fails:
- * 1. man navipage
- * 2. less README.md
- * 3. Displaying a link to https://sr.ht/~smlavine/navipage
+ * 1. man 1 navipage
+ * 2. man ./navipage.1
+ * 3. less README.md
+ * 4. Displaying a link to https://sr.ht/~smlavine/navipage
  */
 static void
 info(void)
 {
 	int ret;
-	ret = system("man navipage");
+	ret = system("man 1 navipage");
+	if (ret != 0) {
+		ret = system("man ./navipage.1");
+	}
 	if (ret != 0) {
 		ret = system("less README.md");
 	}
