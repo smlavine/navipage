@@ -142,6 +142,7 @@ static void scroll_to_bottom(void);
 static void toggle_numbers(void);
 static void update_rows(void);
 static void usage(void);
+static void version(void);
 
 /* Name of the program, as it is executed by the user. This is declared here
  * because argv[0] is going to be modiifed by getopt.
@@ -152,7 +153,6 @@ FileList filel;
 BufferList bufl;
 int rows;
 static const char *USAGE =
-"navipage v" VERSION "\n"
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "This program is free software (GPLv3+); see 'man navipage'\n"
 "or <https://sr.ht/~smlavine/navipage> for more information.\n"
@@ -163,7 +163,7 @@ static const char *USAGE =
 "    -n  Display line numbers.\n"
 "    -r  Infinitely recurse in directories.\n"
 "    -s  Run $NAVIPAGE_SH before reading files.\n"
-"    -v  See -h.\n";
+"    -v  Print version and exit.\n";
 
 /*
  * Append the files in the directory called path to filel. Return value shall
@@ -752,6 +752,15 @@ usage(void)
 	fputs(USAGE, stdout);
 }
 
+/*
+ * Print what version of navipage this is.
+ */
+static void
+version(void)
+{
+	puts("navipage " VERSION);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -778,7 +787,6 @@ main(int argc, char *argv[])
 			flags.debug = 1;
 			break;
 		case 'h':
-		case 'v':
 			usage();
 			exit(EXIT_SUCCESS);
 			break;
@@ -790,6 +798,10 @@ main(int argc, char *argv[])
 			break;
 		case 's':
 			flags.sh = 1;
+			break;
+		case 'v':
+			version();
+			exit(EXIT_SUCCESS);
 			break;
 		case ':':
 		case '?':
