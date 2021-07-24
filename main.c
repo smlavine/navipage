@@ -163,7 +163,7 @@ static const char *USAGE =
 "    -n  Display line numbers.\n"
 "    -r  Infinitely recurse in directories.\n"
 "    -s  Run $NAVIPAGE_SH before reading files.\n"
-"    -v  Print version and exit.\n";
+"    -v  Print version and exit.";
 
 /*
  * Append the files in the directory called path to filel. Return value shall
@@ -749,7 +749,7 @@ update_rows(void)
 static void
 usage(void)
 {
-	fputs(USAGE, stdout);
+	puts(USAGE);
 }
 
 /*
