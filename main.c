@@ -116,6 +116,7 @@ typedef struct {
 
 typedef struct {
 	unsigned int debug:1;
+	unsigned int numbers:1;
 	unsigned int recurse_more:1;
 	unsigned int sh:1;
 } Flags;
@@ -138,6 +139,7 @@ static void redraw(void);
 static long scroll(const int);
 static void scroll_to_top(void);
 static void scroll_to_bottom(void);
+static void toggle_numbers(void);
 static void update_rows(void);
 static void usage(void);
 
@@ -154,10 +156,11 @@ static const char *USAGE =
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "This program is free software (GPLv3+); see 'man navipage'\n"
 "or <https://sr.ht/~smlavine/navipage> for more information.\n"
-"Usage: navipage [-dhrsv] files...\n"
+"Usage: navipage [-dhnrsv] files...\n"
 "Options:\n"
 "    -d  Enable debug output.\n"
 "    -h  Print this help and exit.\n"
+"    -n  Display line numbers.\n"
 "    -r  Infinitely recurse in directories.\n"
 "    -s  Run $NAVIPAGE_SH before reading files.\n"
 "    -v  See -h.\n";
@@ -382,8 +385,10 @@ display_buffer(const Buffer *const b)
 			eolptr = strchr(b->st[b->top + i], '\0');
 		}
 		linelen = eolptr - b->st[b->top + i] + 1;
-		/* Print the line number at the start of each line. */
-		printf("%3d ", b->top + i + 1);
+		if (flags.numbers) {
+			/* Print the line number at the start of each line. */
+			printf("%3d ", b->top + i + 1);
+		}
 		fwrite(b->st[b->top + i], sizeof(char), linelen, stdout);
 	}
 	/* Print status-bar information. */
@@ -606,6 +611,9 @@ input_loop(void)
 			/* Move to the last buffer. */
 			change_buffer(bufl.amt - 1);
 			break;
+		case 'N':
+			toggle_numbers();
+			break;
 		case 'q':
 			quit(EXIT_SUCCESS);
 			break;
@@ -716,6 +724,16 @@ scroll_to_bottom(void)
 }
 
 /*
+ * Toggle whether or not to print line numbers.
+ */
+static void
+toggle_numbers(void)
+{
+	flags.numbers = !flags.numbers;
+	display_buffer(&bufl.v[bufl.n]);
+}
+
+/*
  * Update the 'rows' global variable, usually involving the rogueutil function
  * trows().
  */
@@ -754,7 +772,7 @@ main(int argc, char *argv[])
 	update_rows();
 
 	/* Handle options. */
-	while ((c = getopt(argc, argv, "dhrsv")) != -1) {
+	while ((c = getopt(argc, argv, "dhnrsv")) != -1) {
 		switch (c) {
 		case 'd':
 			flags.debug = 1;
@@ -763,6 +781,9 @@ main(int argc, char *argv[])
 		case 'v':
 			usage();
 			exit(EXIT_SUCCESS);
+			break;
+		case 'n':
+			flags.numbers = 1;
 			break;
 		case 'r':
 			flags.recurse_more = 1;
