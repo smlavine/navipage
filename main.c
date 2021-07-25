@@ -240,57 +240,56 @@ add_path(const char *path, const int recurse)
 		fprintf(stderr, "%s: cannot stat '%s': %s\n",
 				argv0, path, strerror(errsv));
 		return -1;
-	} else if (S_ISDIR(statbuf.st_mode)) {
+	}
+	if (S_ISDIR(statbuf.st_mode)) {
 		if (recurse) {
 			return add_directory(path, recurse);
-		} else {
-			fprintf(stderr, "%s: no -r; omitting directory '%s'\n",
-					argv0, path);
-			return -1;
 		}
-	} else if (!S_ISREG(statbuf.st_mode)) {
+		fprintf(stderr, "%s: no -r; omitting directory '%s'\n",
+				argv0, path);
+		return -1;
+	}
+
+	if (!S_ISREG(statbuf.st_mode)) {
 		fprintf(stderr, "%s: cannot read '%s': not a regular file\n",
 				argv0, path);
 		return -1;
-	} else { 
-		/* Add file path to the list. */
-
-		/* Make sure that there is enough space allocated in filel for
-		 * a new pointer.
-		 */
-		while (filel.size < filel.used) {
-			/* This 4 is arbitrary, it just seems like a good
-			 * amount to increment filel.size by, balancing speed
-			 * (adding only sizeof(char *) over and over again
-			 * could be quite slow) and memory (a larger number
-			 * could result in much more memory than needed being
-			 * allocated.
-			 */
-			filel.size += 4*sizeof(char *);
-		}
-
-		/* Make sure that realloc is valid before reallocating the
-		 * filel.
-		 */
-		realloc_check = realloc(filel.v, filel.size);
-		if (realloc_check == NULL) {
-			outofmem(EXIT_FAILURE);
-		} else {
-			filel.v = realloc_check;
-		}
-
-		/* Allocate space for file path. */
-		filel.v[filel.amt] =
-			malloc((1+strlen(path))*sizeof(char));
-		if (filel.v[filel.amt] == NULL) {
-			outofmem(EXIT_FAILURE);
-		}
-		filel.used += sizeof(char *);
-
-		/* Add the file path! */
-		strcpy(filel.v[filel.amt], path);
-		filel.amt++;
 	}
+	/* Add file path to the list. */
+
+	/* Make sure that there is enough space allocated in filel for a new
+	 * pointer.
+	 */
+	while (filel.size < filel.used) {
+		/* This 4 is arbitrary, it just seems like a good amount to
+		 * increment filel.size by, balancing speed (adding only
+		 * sizeof(char *) over and over again could be quite slow) and
+		 * memory (a larger number could result in much more memory
+		 * than needed being allocated.
+		 */
+		filel.size += 4*sizeof(char *);
+	}
+
+	/* Make sure that realloc is valid before reallocating the filel.
+	*/
+	realloc_check = realloc(filel.v, filel.size);
+	if (realloc_check == NULL) {
+		outofmem(EXIT_FAILURE);
+	} else {
+		filel.v = realloc_check;
+	}
+
+	/* Allocate space for file path. */
+	filel.v[filel.amt] =
+		malloc((1+strlen(path))*sizeof(char));
+	if (filel.v[filel.amt] == NULL) {
+		outofmem(EXIT_FAILURE);
+	}
+	filel.used += sizeof(char *);
+
+	/* Add the file path! */
+	strcpy(filel.v[filel.amt], path);
+	filel.amt++;
 
 	return 0;
 }
