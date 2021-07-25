@@ -315,7 +315,7 @@ change_buffer(const int new)
 
 /*
  * Cleans up terminal settings and the like which were modified by navipage.
- * Usually called before exitting the program.
+ * Usually called before exiting the program.
  */
 static void
 cleanup(void)
