@@ -177,7 +177,6 @@ add_directory(const char *const path, const int recurse)
 	struct dirent *d;
 	DIR *dirp;
 	char *newpath;
-	int newpathlen;
 
 	dirp = opendir(path);
 	if (dirp == NULL) {
@@ -202,8 +201,10 @@ add_directory(const char *const path, const int recurse)
 			continue;
 		}
 
-		newpathlen = strlen(path) + strlen(d->d_name) + 2;
-		newpath = malloc(newpathlen*sizeof(char));
+		newpath = malloc(sizeof(*newpath) *
+				(strlen(path) + strlen(d->d_name) + 2));
+		if (newpath == NULL)
+			outofmem(EXIT_FAILURE);
 		sprintf(newpath, "%s/%s", path, d->d_name);
 
 		add_path(newpath, recurse);
