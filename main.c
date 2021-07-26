@@ -658,7 +658,6 @@ quit(const int code)
 	case SIGQUIT:
 		exit(EXIT_SUCCESS);
 		break;
-	case SIGSEGV:
 	case SIGHUP:
 		exit(EXIT_FAILURE);
 		break;
