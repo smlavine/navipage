@@ -431,32 +431,41 @@ static void
 execute_command(void)
 {
 	char *line;
+
 	gotoxy(1, rows);
-	setColor(YELLOW);
+
 	/* Clear the line of text before showing the command prompt. */
 	printf("%*s", tcols(), "");
 	gotoxy(1, rows);
+
 	fflush(stdout);
+
 	/* Re-enable displaying user input. */
 	system("stty echo");
+
 	showcursor();
-	line = readline("!");
-	if (line != NULL) {
-		system(line);
-	}
-	gotoxy(1, rows);
-	/* The command could change the color of text, so we should re-set it
-	 * here in addition to above.
-	 */
 	setColor(YELLOW);
+	if ((line = readline("!")) != NULL) {
+		/* Execute the command in normal colors. */
+		resetColor();
+		fflush(stdout);
+
+		system(line);
+		free(line);
+
+		setColor(YELLOW);
+		fflush(stdout);
+	}
+
+	gotoxy(1, rows);
+	system("stty -echo");
 	fputs("navipage: press any key to return.", stdout);
 	fflush(stdout);
 	anykey(NULL);
-	system("stty -echo");
+
 	hidecursor();
 	resetColor();
 	display_buffer(&bufl.v[bufl.n]);
-	free(line);
 }
 
 /*
