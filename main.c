@@ -130,6 +130,7 @@ static int compare_path_basenames(const void *, const void *);
 static void display_buffer(const Buffer *const);
 static void error_buffer(Buffer *const, const char *, ...);
 static void execute_command(void);
+static void handle_signals(const int);
 static void info(void);
 static int init_buffer(Buffer *const, const char *const);
 static void input_loop(void);
@@ -463,6 +464,25 @@ execute_command(void)
 }
 
 /*
+ * Handle signals.
+ */
+static void
+handle_signals(int sig)
+{
+	switch (sig) {
+	case SIGHUP:
+		quit(EXIT_FAILURE);
+		break;
+	case SIGINT:
+	case SIGTERM:
+	case SIGQUIT:
+	default:
+		quit(EXIT_SUCCESS);
+		break;
+	}
+}
+
+/*
  * Display helpful information in the following order, with the next option
  * being tried if the first fails:
  * 1. man 1 navipage
@@ -652,19 +672,7 @@ static void
 quit(const int code)
 {
 	cleanup();
-	switch (code) {
-	case SIGINT:
-	case SIGTERM:
-	case SIGQUIT:
-		exit(EXIT_SUCCESS);
-		break;
-	case SIGHUP:
-		exit(EXIT_FAILURE);
-		break;
-	default:
-		exit(code);
-		break;
-	}
+	exit(code);
 }
 
 /*
@@ -770,11 +778,17 @@ main(int argc, char *argv[])
 {
 	int c, i;
 	char *envstr;
+	struct sigaction sa;
 
-	signal(SIGINT, quit);
-	signal(SIGTERM, quit);
-	signal(SIGQUIT, quit);
-	signal(SIGHUP, quit);
+	if (sa.sa_handler = handle_signals,
+			sigaction(SIGINT, &sa, NULL)  == -1 ||
+			sigaction(SIGTERM, &sa, NULL) == -1 ||
+			sigaction(SIGQUIT, &sa, NULL) == -1 ||
+			sigaction(SIGHUP, &sa, NULL)  == -1) {
+		fprintf(stderr, "%s: cannot sigaction: %s\n",
+				argv[0], strerror(errno));
+		return EXIT_FAILURE;
+	}
 
 	argv0 = argv[0];
 	filel.size = 4*sizeof(char *);
