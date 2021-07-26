@@ -473,22 +473,16 @@ execute_command(void)
 static void
 info(void)
 {
-	int ret;
-	ret = system("man 1 navipage");
-	if (ret != 0) {
-		ret = system("man ./navipage.1");
-	}
-	if (ret != 0) {
-		ret = system("less README.md");
-	}
-	if (ret != 0) {
-		gotoxy(1, rows);
-		setColor(YELLOW);
-		fputs("See <https://sr.ht/~smlavine/navipage> for help.",
-				stdout);
-		resetColor();
-		fflush(stdout);
-	}
+	if (system("man 1 navipage")   == 0) return;
+	if (system("man ./navipage.1") == 0) return;
+	if (system("less README.md")   == 0) return;
+
+	gotoxy(1, rows);
+	setString("\033[2K"); /* VT100 escape code; clears the status line */
+	/* -1 means to use the current background color. */
+	colorPrint(YELLOW, -1,
+			"See <https://sr.ht/~smlavine/navipage> for info.");
+	fflush(stdout);
 }
 
 /*
