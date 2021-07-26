@@ -430,42 +430,36 @@ error_buffer(Buffer *const b, const char *format, ...)
 static void
 execute_command(void)
 {
+	const color_code EC_COLOR = YELLOW; /* EC short for execute_command */
 	char *line;
 
+	/* Clear the status line before showing the command prompt. */
 	gotoxy(1, rows);
-
-	/* Clear the line of text before showing the command prompt. */
-	printf("%*s", tcols(), "");
-	gotoxy(1, rows);
-
-	fflush(stdout);
+	setString("\033[2K"); /* VT100 escape code */
 
 	/* Re-enable displaying user input. */
 	system("stty echo");
-
 	showcursor();
-	setColor(YELLOW);
+
+	setColor(EC_COLOR); /* Display readline prompt in EC_COLOR */
 	if ((line = readline("!")) != NULL) {
-		/* Execute the command in normal colors. */
 		resetColor();
 		fflush(stdout);
-
 		system(line);
 		free(line);
-
-		setColor(YELLOW);
-		fflush(stdout);
 	}
 
-	gotoxy(1, rows);
 	system("stty -echo");
-	fputs("navipage: press any key to return.", stdout);
+	gotoxy(1, rows);
+	/* -1 means to use the current background color. */
+	colorPrint(EC_COLOR, -1, "navipage: press any key to return.");
 	fflush(stdout);
 	anykey(NULL);
 
 	hidecursor();
 	resetColor();
 	display_buffer(&bufl.v[bufl.n]);
+	/* fflush(stdout) -- unneeded, is ran at the end of display_buffer() */
 }
 
 /*
