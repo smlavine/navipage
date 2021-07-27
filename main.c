@@ -153,10 +153,11 @@ Flags flags;
 FileList filel;
 BufferList bufl;
 int rows;
+#define URL "https://sr.ht/~smlavine/navipage"
 static const char *USAGE =
 "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
 "This program is free software (GPLv3+); see 'man navipage'\n"
-"or <https://sr.ht/~smlavine/navipage> for more information.\n"
+"or <" URL "> for more information.\n"
 "Usage: navipage [-dhnrsv] files...\n"
 "Options:\n"
 "    -d  Enable debug output.\n"
@@ -488,7 +489,7 @@ handle_signals(int sig)
  * 1. man 1 navipage
  * 2. man ./navipage.1
  * 3. less README.md
- * 4. Displaying a link to https://sr.ht/~smlavine/navipage
+ * 4. Displaying a link to URL
  */
 static void
 info(void)
@@ -500,8 +501,7 @@ info(void)
 	gotoxy(1, rows);
 	setString("\033[2K"); /* VT100 escape code; clears the status line */
 	/* -1 means to use the current background color. */
-	colorPrint(YELLOW, -1,
-			"See <https://sr.ht/~smlavine/navipage> for info.");
+	colorPrint(YELLOW, -1, "Find help online at <" URL ">.");
 	fflush(stdout);
 }
 
