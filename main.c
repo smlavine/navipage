@@ -58,10 +58,10 @@ typedef struct {
 	char *text;
 
 	/* The length of the file. */
-	size_t length;
+	long length;
 
 	/* The amount of space allocated for the file. */
-	int size;
+	long size;
 
 	/* An array of pointers to the first character of every line. This is
 	 * used in scrolling.
@@ -513,7 +513,7 @@ static int
 init_buffer(Buffer *const b, const char *const path)
 {
 	FILE *fp;
-	size_t i;
+	long i;
 
 	/* Each condition completes a task that I need to do to read the file
 	 * into the buffer, and also checks if it succeeded. If the condition
@@ -528,18 +528,12 @@ init_buffer(Buffer *const b, const char *const path)
 		error_buffer(b, "%s: cannot fseek '%s': %s\n",
 				argv0, path, strerror(errno));
 		return -1;
-	} else if (ftell(fp) == -1) {
+	} else if ((b->length = ftell(fp)) == -1) {
 		error_buffer(b, "%s: cannot ftell '%s': %s\n",
 				argv0, path, strerror(errno));
 		return -1;
 	}
 
-	/* b->length must be assigned here because it is of type size_t, which
-	 * is unsigned, and therefore cannot be -1. Because of this, -1 cannot
-	 * be checked for to detect an error. Therefore it is assigned here,
-	 * once we are sure there is not an error with ftell().
-	 */
-	b->length = (size_t)ftell(fp);
 	rewind(fp);
 	b->size = b->length + 1;
 	if ((b->text = malloc(b->size*sizeof(char))) == NULL) {
