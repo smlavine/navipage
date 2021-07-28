@@ -35,6 +35,7 @@
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
+#define ST_SIZE_INCR 10
 enum add_path_recurse_argument {
 	NO_RECURSE = 0,
 	RECURSE = 1
@@ -508,38 +509,31 @@ info(void)
 /*
  * Read the file at path into b, and set various values of b, like length,
  * top, offset, etc. Returns 0 on success, -1 on error.
+ * TODO: Change this function to return a 'Buffer *' and NULL on error.
  */
 static int
 init_buffer(Buffer *const b, const char *const path)
 {
 	FILE *fp;
+	char *errfunc;
 	long i;
 
-	/* Each condition completes a task that I need to do to read the file
-	 * into the buffer, and also checks if it succeeded. If the condition
-	 * is true, then the function failed, and the error is handled
-	 * accordingly.
+	/* Spaces are intentionally used for alignment here because this is an
+	 * odd expression and formatting the usual way with tabs looks worse.
 	 */
-	if ((fp = fopen(path, "r")) == NULL) {
-		error_buffer(b, "%s: cannot fopen '%s': %s\n",
-				argv0, path, strerror(errno));
-		return -1;
-	} else if (fseek(fp, 0L, SEEK_END) == -1) {
-		error_buffer(b, "%s: cannot fseek '%s': %s\n",
-				argv0, path, strerror(errno));
-		return -1;
-	} else if ((b->length = ftell(fp)) == -1) {
-		error_buffer(b, "%s: cannot ftell '%s': %s\n",
-				argv0, path, strerror(errno));
+	if ( (errfunc = "fopen", (fp = fopen(path, "r")) == NULL) ||
+	     (errfunc = "fseek", fseek(fp, 0L, SEEK_END) == -1)   ||
+	     (errfunc = "ftell", (b->length = ftell(fp)) == -1) ) {
+		error_buffer(b, "%s: cannot %s '%s': %s\n",
+				argv0, errfunc, path, strerror(errno));
 		return -1;
 	}
 
 	rewind(fp);
 	b->size = b->length + 1;
-	if ((b->text = malloc(b->size*sizeof(char))) == NULL) {
+	if ((b->text = malloc(sizeof(*b->text) * b->size)) == NULL)
 		outofmem(EXIT_FAILURE);
-	}
-	if (fread(b->text, sizeof(char), b->length, fp) != b->length) {
+	if (fread(b->text, sizeof(char), b->length, fp) != (size_t)b->length) {
 		error_buffer(b, "%s: fread failed on '%s'\n", argv0, path);
 		return -1;
 	}
@@ -558,32 +552,42 @@ init_buffer(Buffer *const b, const char *const path)
 		return 0;
 	}
 
-	/* We will incrememnt memory in blocks of 10. That is, every time we
+	/* We will increment memory in blocks of 10. That is, every time we
 	 * reallocate memory because there is not enough room, we will add
 	 * enough memory to fit ten more char pointers.
 	 */
-	if ((b->st = malloc((b->st_size = 10)*sizeof(char *))) == NULL) {
+	b->st_size = ST_SIZE_INCR;
+	if ((b->st = malloc(sizeof(*b->st) * b->st_size)) == NULL)
 		outofmem(EXIT_FAILURE);
-	}
+
 	/* The first line starts at the first character of the text, so we
 	 * start there.
 	 */
 	b->st[0] = b->text;
 	b->st_amt = 1;
+
 	for (i = 1; i < b->length; i++) {
-		if (b->text[i - 1] == '\n') {
-			if (b->st_amt >= b->st_size) {
-				b->st_size += 10;
-				b->st = realloc(b->st,
-						b->st_size*sizeof(char *));
-				if (b->st == NULL) {
-					outofmem(EXIT_FAILURE);
-				}
-			}
-			b->st[b->st_amt] = b->text + i;
-			b->st_amt++;
+		if (b->text[i - 1] != '\n')
+			continue;
+
+		/* b->text[i] is the first character of a line, so append
+		 * &b->text[i] to b->st.
+		 */
+		while (b->st_size <= b->st_amt) {
+			char **realloc_check;
+
+			b->st_size += ST_SIZE_INCR;
+			realloc_check = realloc(b->st,
+					sizeof(*b->st) * b->st_size);
+			if (realloc_check == NULL)
+				outofmem(EXIT_FAILURE);
+			else
+				b->st = realloc_check;
 		}
+
+		b->st[b->st_amt++] = &b->text[i];
 	}
+
 	return 0;
 }
 
