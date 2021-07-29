@@ -138,7 +138,7 @@ static void input_loop(void);
 static void outofmem(const int);
 static void quit(const int);
 static void redraw(void);
-static long scroll(const int);
+static int scroll(const int);
 static void scroll_to_top(void);
 static void scroll_to_bottom(void);
 static void toggle_numbers(void);
@@ -684,33 +684,28 @@ redraw(void)
 }
 
 /*
- * Scroll by 'offset' lines in the buffer. If the operation is successful, that
- * is, the caller doesn't try to scroll outside the bounds of the file, then 0
- * is returned; otherwise, the line number that would have been scrolled to
+ * Scroll by 'offset' lines in the buffer. On success, 0 is returned;
+ * otherwise the line number that would have been made the top of the screen
  * is returned.
  */
-static long
+static int
 scroll(const int offset)
 {
-	int tmp;
-	tmp = bufl.v[bufl.n].top + offset;
-	/* tmp is the "new" line index. Compare it to see that it is less than
-	 * the amount of lines, minus the amount of rows because top is of
-	 * course at the top of the screen and, the end of the file will be at
-	 * the bottom, and add 1 to that number because we do not print on the
-	 * bottom-most line of the screen (that is for status information like
-	 * the current buffer), and 1 more because st_amt is 1-indexed while
-	 * tmp is 0-indexed.  The second comparison is much simpler; simply see
-	 * that the top of the screen does not scroll behind the start of the
-	 * file.
-	 */
-	if (tmp < bufl.v[bufl.n].st_amt - rows + 2 && tmp >= 0) {
-		bufl.v[bufl.n].top = tmp;
-		display_buffer(&bufl.v[bufl.n]);
-		return 0;
-	}
+	int newtop;
 
-	return tmp;
+	newtop = bufl.v[bufl.n].top + offset;
+
+	/* newtop must be >= 0 because it will be used as an array index.
+	 * newtop must be < bufl.v[bufl.n].st_amt - rows + 2 because if it
+	 * isn't, then we will have a buffer overrun of bufl.v[bufl.n].st. See
+	 * display_buffer() for a better understanding of this.
+	 */
+	if (newtop < 0 || newtop >= bufl.v[bufl.n].st_amt - rows + 2)
+		return newtop;
+
+	bufl.v[bufl.n].top = newtop;
+	display_buffer(&bufl.v[bufl.n]);
+	return 0;
 }
 
 /*
