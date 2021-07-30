@@ -183,8 +183,7 @@ add_directory(const char *const path, const int recurse)
 	DIR *dirp;
 	char *newpath;
 
-	dirp = opendir(path);
-	if (dirp == NULL) {
+	if ((dirp = opendir(path)) == NULL) {
 		fprintf(stderr, "%s: cannot opendir '%s': %s\n",
 				argv0, path, strerror(errno));
 		return -1;
@@ -264,9 +263,8 @@ add_path(const char *path, const int recurse)
 		filel.size += sizeof(*filel.v) * FILEL_SIZE_INCR;
 	}
 
-	realloc_check = realloc(filel.v, filel.size);
-	if (realloc_check == NULL) {
 	/* Make sure that realloc is valid before reallocating the filel. */
+	if ((realloc_check = realloc(filel.v, filel.size)) == NULL) {
 		outofmem(EXIT_FAILURE);
 	} else {
 		filel.v = realloc_check;
