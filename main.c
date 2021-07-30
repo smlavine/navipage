@@ -76,8 +76,7 @@ typedef struct {
 	int st_size;
 
 	/* The variable such that st[top] points to the start of the line that
-	 * is drawn at the top of the screen. It changes when the screen is
-	 * scrolled.
+	 * is drawn at the top of the screen. See scroll().
 	 */
 	int top;
 } Buffer;
