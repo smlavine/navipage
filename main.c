@@ -142,6 +142,7 @@ static int add_directory(const char *const, const int);
 static int add_path(const char *const, const int);
 static int change_buffer(const int);
 static void cleanup(void);
+static void clear_current_line(void);
 static int compare_path_basenames(const void *, const void *);
 static void display_buffer(const Buffer *const);
 static void error_buffer(Buffer *const, const char *, ...);
@@ -314,6 +315,16 @@ cleanup(void)
 }
 
 /*
+ * Prints a VT100 escape code that clears the current line, without advancing
+ * the cursor.
+ */
+static void
+clear_current_line(void)
+{
+	setString("\033[2K");
+}
+
+/*
  * Compares two file paths by their basename. Of importance to us is that files
  * named in YYYYMMDD format are compared such that the file named with the
  * further date is "less than" the other path. Return value shall be the
@@ -430,7 +441,7 @@ execute_command(void)
 
 	/* Clear the status line before showing the command prompt. */
 	gotoxy(1, rows);
-	setString("\033[2K"); /* VT100 escape code */
+	clear_current_line();
 
 	/* Re-enable displaying user input. */
 	system("stty echo");
@@ -493,7 +504,7 @@ info(void)
 	if (system("less README.md")   == 0) return;
 
 	gotoxy(1, rows);
-	setString("\033[2K"); /* VT100 escape code; clears the status line */
+	clear_current_line();
 	/* -1 means to use the current background color. */
 	colorPrint(YELLOW, -1, "Find help online at <" URL ">.");
 	fflush(stdout);
