@@ -778,11 +778,6 @@ main(int argc, char *argv[])
 			sigaction(SIGHUP, &sa, NULL)  == -1) {
 		fprintf(stderr, "%s: cannot sigaction: %s\n",
 	}
-
-	filel.size = 4*sizeof(char *);
-	filel.used = 0;
-	if ((filel.v = malloc(filel.size)) == NULL) {
-		outofmem(EXIT_FAILURE);
 				argv0, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -833,6 +828,18 @@ main(int argc, char *argv[])
 		/* Add the files at $NAVIPAGE_DIR to filel. */
 		add_path(envstr, RECURSE);
 	}
+	/*
+	 * Add paths to filel.
+	 */
+
+	filel.used = 0;
+	if (filel.size = sizeof(*filel.v) * FILEL_SIZE_INCR,
+			(filel.v = malloc(filel.size)) == NULL)
+		outofmem(EXIT_FAILURE);
+
+	/* Add the files at $NAVIPAGE_DIR to filel. */
+	if (argc == 0 && (envstr = getenv("NAVIPAGE_DIR")) != NULL)
+		add_path(envstr, RECURSE);
 
 	/* All remaining arguments are paths to files to be read. */
 	for (i = 0; i < argc; i++) {
