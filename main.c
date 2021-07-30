@@ -768,6 +768,7 @@ main(int argc, char *argv[])
 	char *envstr;
 	struct sigaction sa;
 
+	argv0 = argv[0];
 	if (sa.sa_handler = handle_signals,
 			sigaction(SIGINT, &sa, NULL)  == -1 ||
 			sigaction(SIGTERM, &sa, NULL) == -1 ||
@@ -778,7 +779,6 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	argv0 = argv[0];
 	filel.size = 4*sizeof(char *);
 	filel.used = 0;
 	if ((filel.v = malloc(filel.size)) == NULL) {
