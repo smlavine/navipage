@@ -786,7 +786,6 @@ main(int argc, char *argv[])
 				argv0, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	update_rows();
 
 	/* Handle options. */
 	while ((c = getopt(argc, argv, "dhnrsv")) != -1) {
@@ -865,6 +864,7 @@ main(int argc, char *argv[])
 	system("stty -echo"); /* Disable user input showing on the screen. */
 	hidecursor();
 
+	update_rows();
 	display_buffer(&bufl.v[bufl.n]);
 	input_loop();
 
