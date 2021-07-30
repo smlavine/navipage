@@ -242,12 +242,13 @@ add_path(const char *path, const int recurse)
 		return -1;
 	}
 	if (S_ISDIR(statbuf.st_mode)) {
-		if (recurse) {
-			return add_directory(path, recurse);
+		if (!recurse) {
+			fprintf(stderr, "%s: no -r; omitting directory '%s'\n",
+					argv0, path);
+			return -1;
 		}
-		fprintf(stderr, "%s: no -r; omitting directory '%s'\n",
-				argv0, path);
-		return -1;
+
+		return add_directory(path, recurse);
 	}
 
 	if (!S_ISREG(statbuf.st_mode)) {
