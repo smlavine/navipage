@@ -194,9 +194,8 @@ add_directory(const char *const path, const int recurse)
 	while ((d = readdir(dirp)) != NULL) {
 		/* Exclude "." and ".." to avoid infinite recursion. */
 		if (strcmp(d->d_name, ".") == 0 ||
-				strcmp(d->d_name, "..") == 0) {
+				strcmp(d->d_name, "..") == 0)
 			continue;
-		}
 
 		/* TODO: look into using nftw() */
 
@@ -259,23 +258,20 @@ add_path(const char *path, const int recurse)
 	/* Make sure that there is enough space allocated in filel for a new
 	 * pointer.
 	 */
-	while (filel.size < filel.used) {
+	while (filel.size < filel.used)
 		filel.size += sizeof(*filel.v) * FILEL_SIZE_INCR;
-	}
 
 	/* Make sure that realloc is valid before reallocating the filel. */
-	if ((realloc_check = realloc(filel.v, filel.size)) == NULL) {
+	if ((realloc_check = realloc(filel.v, filel.size)) == NULL)
 		outofmem(EXIT_FAILURE);
-	} else {
+	else
 		filel.v = realloc_check;
-	}
 
 	/* Allocate space for file path. */
 	filel.v[filel.amt] = malloc(sizeof(*filel.v[filel.amt]) *
 			(1 + strlen(path)));
-	if (filel.v[filel.amt] == NULL) {
+	if (filel.v[filel.amt] == NULL)
 		outofmem(EXIT_FAILURE);
-	}
 
 	filel.used += sizeof(*filel.v);
 
@@ -346,7 +342,8 @@ compare_path_basenames(const void *p1, const void *p2)
 	 */
 	copy[0] = strdup(*(const char **)p1);
 	copy[1] = strdup(*(const char **)p2);
-	if (copy[0] == NULL || copy[1] == NULL) outofmem(EXIT_FAILURE);
+	if (copy[0] == NULL || copy[1] == NULL)
+		outofmem(EXIT_FAILURE);
 
 	base[0] = basename(copy[0]);
 	base[1] = basename(copy[1]);
@@ -383,14 +380,15 @@ display_buffer(const Buffer *const b)
 		 * cannot be found, then it is the last line in the file
 		 * and we should find the eof.
 		 */
-		if ((eolptr = strchr(b->st[b->top + i], '\n')) == NULL) {
+		if ((eolptr = strchr(b->st[b->top + i], '\n')) == NULL)
 			eolptr = strchr(b->st[b->top + i], '\0');
-		}
+
 		linelen = eolptr - b->st[b->top + i] + 1;
-		if (flags.numbers) {
-			/* Print the line number at the start of each line. */
+
+		/* Print the line number at the start of each line. */
+		if (flags.numbers)
 			printf("%3d ", b->top + i + 1);
-		}
+
 		fwrite(b->st[b->top + i], sizeof(char), linelen, stdout);
 	}
 	/* Print status-bar information. */
@@ -410,9 +408,8 @@ error_buffer(Buffer *const b, const char *format, ...)
 	va_list ap;
 
 	b->size = 128;
-	if ((b->text = malloc(sizeof(*b->text) * b->size)) == NULL) {
+	if ((b->text = malloc(sizeof(*b->text) * b->size)) == NULL)
 		outofmem(EXIT_FAILURE);
-	}
 
 	va_start(ap, format);
 	vsnprintf(b->text, b->size, format, ap);
@@ -777,7 +774,6 @@ main(int argc, char *argv[])
 			sigaction(SIGQUIT, &sa, NULL) == -1 ||
 			sigaction(SIGHUP, &sa, NULL)  == -1) {
 		fprintf(stderr, "%s: cannot sigaction: %s\n",
-	}
 				argv0, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -819,15 +815,10 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (flags.sh && (envstr = getenv("NAVIPAGE_SH")) != NULL) {
-		/* Run $NAVIPAGE_SH before reading files. */
+	/* Run $NAVIPAGE_SH before reading files. */
+	if (flags.sh && (envstr = getenv("NAVIPAGE_SH")) != NULL)
 		system(envstr);
-	}
 
-	if (argc == 0 && (envstr = getenv("NAVIPAGE_DIR")) != NULL) {
-		/* Add the files at $NAVIPAGE_DIR to filel. */
-		add_path(envstr, RECURSE);
-	}
 	/*
 	 * Add paths to filel.
 	 */
@@ -842,9 +833,8 @@ main(int argc, char *argv[])
 		add_path(envstr, RECURSE);
 
 	/* All remaining arguments are paths to files to be read. */
-	for (i = 0; i < argc; i++) {
+	for (i = 0; i < argc; i++)
 		add_path(argv[i], flags.recurse_more);
-	}
 
 	/* Exit the program if no files were read. */
 	if (filel.amt == 0) {
@@ -859,13 +849,10 @@ main(int argc, char *argv[])
 	 */
 	bufl.amt = filel.amt;
 	bufl.n = 0;
-	if ((bufl.v = malloc(sizeof(*bufl.v) * bufl.amt)) == NULL) {
+	if ((bufl.v = malloc(sizeof(*bufl.v) * bufl.amt)) == NULL)
 		outofmem(EXIT_FAILURE);
-	}
-
-	for (i = 0; i < bufl.amt; i++) {
+	for (i = 0; i < bufl.amt; i++)
 		init_buffer(&bufl.v[i], filel.v[i]);
-	}
 
 	/* Set some things with the terminal. */
 	system("stty -echo"); /* Disable user input showing on the screen. */
