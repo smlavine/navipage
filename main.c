@@ -769,6 +769,8 @@ main(int argc, char *argv[])
 	struct sigaction sa;
 
 	argv0 = argv[0];
+
+	/* Register signal handler. */
 	if (sa.sa_handler = handle_signals,
 			sigaction(SIGINT, &sa, NULL)  == -1 ||
 			sigaction(SIGTERM, &sa, NULL) == -1 ||
