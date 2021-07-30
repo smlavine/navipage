@@ -37,6 +37,7 @@
 
 /* TODO: move these defines to appropriate places when main.c is split. */
 #define ST_SIZE_INCR 10
+#define FILEL_SIZE_INCR 4
 
 #define URL   "https://sr.ht/~smlavine/navipage"
 #define USAGE "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n" \
@@ -260,7 +261,7 @@ add_path(const char *path, const int recurse)
 	 * pointer.
 	 */
 	while (filel.size < filel.used) {
-		filel.size += 4*sizeof(char *);
+		filel.size += sizeof(*filel.v) * FILEL_SIZE_INCR;
 	}
 
 	realloc_check = realloc(filel.v, filel.size);
@@ -272,12 +273,13 @@ add_path(const char *path, const int recurse)
 	}
 
 	/* Allocate space for file path. */
-	filel.v[filel.amt] =
-		malloc((1+strlen(path))*sizeof(char));
+	filel.v[filel.amt] = malloc(sizeof(*filel.v[filel.amt]) *
+			(1 + strlen(path)));
 	if (filel.v[filel.amt] == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
-	filel.used += sizeof(char *);
+
+	filel.used += sizeof(*filel.v);
 
 	/* Add the file path! */
 	strcpy(filel.v[filel.amt], path);
@@ -410,7 +412,7 @@ error_buffer(Buffer *const b, const char *format, ...)
 	va_list ap;
 
 	b->size = 128;
-	if ((b->text = malloc(b->size*sizeof(char))) == NULL) {
+	if ((b->text = malloc(sizeof(*b->text) * b->size)) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
 
@@ -844,14 +846,14 @@ main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	qsort(filel.v, filel.amt, sizeof(char *), compare_path_basenames);
+	qsort(filel.v, filel.amt, sizeof(*filel.v), compare_path_basenames);
 
 	/*
 	 * Iniitalize buffers.
 	 */
 	bufl.amt = filel.amt;
 	bufl.n = 0;
-	if ((bufl.v = malloc(bufl.amt*sizeof(Buffer))) == NULL) {
+	if ((bufl.v = malloc(sizeof(*bufl.v) * bufl.amt)) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
 
