@@ -393,11 +393,10 @@ display_buffer(const Buffer *const b)
 
 		fwrite(b->st[b->top + i], sizeof(char), linelen, stdout);
 	}
+
 	/* Print status-bar information. */
 	gotoxy(1, rows);
-	printf("#%d/%d  %s  %s",
-			bufl.n + 1, bufl.amt, filel.v[bufl.n],
-			"Press 'i' for help.");
+	printf("#%d/%d  %s", bufl.n + 1, bufl.amt, filel.v[bufl.n]);
 	fflush(stdout);
 }
 
