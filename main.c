@@ -362,8 +362,7 @@ compare_path_basenames(const void *p1, const void *p2)
 static void
 display_buffer(const Buffer *const b)
 {
-	int i, linestoprint, linelen;
-	char *eolptr;
+	int i, linestoprint;
 
 	cls();
 	gotoxy(1, 1);
@@ -376,6 +375,9 @@ display_buffer(const Buffer *const b)
 	linestoprint = MIN(b->st_amt, rows - 1);
 
 	for (i = 0; i < linestoprint; i++) {
+		int linelen;
+		char *eolptr;
+
 		/* Find the location of the end of the line, or if an eol
 		 * cannot be found, then it is the last line in the file
 		 * and we should find the eof.
