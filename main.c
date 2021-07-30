@@ -777,7 +777,6 @@ main(int argc, char *argv[])
 			sigaction(SIGQUIT, &sa, NULL) == -1 ||
 			sigaction(SIGHUP, &sa, NULL)  == -1) {
 		fprintf(stderr, "%s: cannot sigaction: %s\n",
-		return EXIT_FAILURE;
 	}
 
 	filel.size = 4*sizeof(char *);
@@ -785,6 +784,7 @@ main(int argc, char *argv[])
 	if ((filel.v = malloc(filel.size)) == NULL) {
 		outofmem(EXIT_FAILURE);
 				argv0, strerror(errno));
+		exit(EXIT_FAILURE);
 	}
 	update_rows();
 
