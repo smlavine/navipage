@@ -188,16 +188,10 @@ add_directory(const char *const path, const int recurse)
 		return -1;
 	}
 
-	/* We need to reset errno here, because it is the only way to
-	 * to determine if readdir() errors out, or finishes
-	 * successfully.
-	 */
+	/* Reset errno in order to detect readdir/closedir errors. */
 	errno = 0;
 	while ((d = readdir(dirp)) != NULL) {
-		/* If we do not exclude these (the current and one-up
-		 * directories), then they will recurse unto themselves,
-		 * creating many repeats in the list.
-		 */
+		/* Exclude "." and ".." to avoid infinite recursion. */
 		if (strcmp(d->d_name, ".") == 0 ||
 				strcmp(d->d_name, "..") == 0) {
 			continue;
@@ -263,19 +257,12 @@ add_path(const char *path, const int recurse)
 	 * pointer.
 	 */
 	while (filel.size < filel.used) {
-		/* This 4 is arbitrary, it just seems like a good amount to
-		 * increment filel.size by, balancing speed (adding only
-		 * sizeof(char *) over and over again could be quite slow) and
-		 * memory (a larger number could result in much more memory
-		 * than needed being allocated.
-		 */
 		filel.size += 4*sizeof(char *);
 	}
 
-	/* Make sure that realloc is valid before reallocating the filel.
-	*/
 	realloc_check = realloc(filel.v, filel.size);
 	if (realloc_check == NULL) {
+	/* Make sure that realloc is valid before reallocating the filel. */
 		outofmem(EXIT_FAILURE);
 	} else {
 		filel.v = realloc_check;
@@ -380,17 +367,18 @@ display_buffer(const Buffer *const b)
 
 	cls();
 	gotoxy(1, 1);
-	/* The amount of lines to be printed in this call. Print rows - 1 (the
-	 * height of the screen, not including the status bar), but only print
-	 * the amount of lines in the file if that is less than rows - 1, to
-	 * avoid a segfault.
+
+	/* The amount of lines to be printed in this call. Print `rows - 1`
+	 * (the height of the screen, not including the status bar), but only
+	 * print the amount of lines in the file if that is less than
+	 * `rows - 1`, to avoid a segfault.
 	 */
 	linestoprint = MIN(b->st_amt, rows - 1);
 
 	for (i = 0; i < linestoprint; i++) {
 		/* Find the location of the end of the line, or if an eol
-		 * cannot be found, then it is the last line in the file and we
-		 * should find the eof.
+		 * cannot be found, then it is the last line in the file
+		 * and we should find the eof.
 		 */
 		if ((eolptr = strchr(b->st[b->top + i], '\n')) == NULL) {
 			eolptr = strchr(b->st[b->top + i], '\0');
@@ -826,8 +814,8 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* Set argc to the amount of arguments remaining, and point argv to the
-	 * first argument after the options.
+	/* Set argc to the amount of arguments remaining, and
+	 * point argv to the first argument after the options.
 	 */
 	argc -= optind;
 	argv += optind;
@@ -856,7 +844,7 @@ main(int argc, char *argv[])
 	qsort(filel.v, filel.amt, sizeof(char *), compare_path_basenames);
 
 	/*
-	 * Now we can begin working with buffers.
+	 * Iniitalize buffers.
 	 */
 	bufl.amt = filel.amt;
 	bufl.n = 0;
@@ -864,32 +852,14 @@ main(int argc, char *argv[])
 		outofmem(EXIT_FAILURE);
 	}
 
-	/*
-	 * Iniitalize all buffers.
-	 */
 	for (i = 0; i < bufl.amt; i++) {
 		init_buffer(&bufl.v[i], filel.v[i]);
 	}
 
-	/*
-	 * Before we start displaying files to the user and reading input, some
-	 * housekeeping.
-	 */
-
-	/* Disable showing input on the screen while the program runs. This
-	 * prevents all the 'j's and 'k's from showing on the bottom of the
-	 * screen.
-	 */
-	system("stty -echo");
-	/*
-	 * Hide the cursor. It takes up a space, and can be seen moving when
-	 * printing the file, which is undesirable.
-	 */
+	/* Set some things with the terminal. */
+	system("stty -echo"); /* Disable user input showing on the screen. */
 	hidecursor();
 
-	/*
-	 * Showtime.
-	 */
 	display_buffer(&bufl.v[bufl.n]);
 	input_loop();
 
