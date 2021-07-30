@@ -375,7 +375,6 @@ display_buffer(const Buffer *const b)
 {
 	int i, linestoprint;
 
-	cls();
 	gotoxy(1, 1);
 
 	/* The amount of lines to be printed in this call. Print `rows - 1`
@@ -397,6 +396,8 @@ display_buffer(const Buffer *const b)
 			eolptr = strchr(b->st[b->top + i], '\0');
 
 		linelen = eolptr - b->st[b->top + i] + 1;
+
+		clear_current_line();
 
 		/* Print the line number at the start of each line. */
 		if (flags.numbers)
