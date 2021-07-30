@@ -149,6 +149,7 @@ static void version(void);
  * because argv[0] is going to be modiifed by getopt.
  */
 char *argv0;
+
 Flags flags;
 FileList filel;
 BufferList bufl;
@@ -257,6 +258,7 @@ add_path(const char *path, const int recurse)
 				argv0, path);
 		return -1;
 	}
+
 	/* Add file path to the list. */
 
 	/* Make sure that there is enough space allocated in filel for a new
@@ -386,6 +388,7 @@ display_buffer(const Buffer *const b)
 	 * avoid a segfault.
 	 */
 	linestoprint = MIN(b->st_amt, rows - 1);
+
 	for (i = 0; i < linestoprint; i++) {
 		/* Find the location of the end of the line, or if an eol
 		 * cannot be found, then it is the last line in the file and we
@@ -416,13 +419,16 @@ static void
 error_buffer(Buffer *const b, const char *format, ...)
 {
 	va_list ap;
+
 	b->size = 128;
 	if ((b->text = malloc(b->size*sizeof(char))) == NULL) {
 		outofmem(EXIT_FAILURE);
 	}
+
 	va_start(ap, format);
 	vsnprintf(b->text, b->size, format, ap);
 	va_end(ap);
+
 	b->length = strlen(b->text);
 }
 
@@ -441,6 +447,7 @@ execute_command(void)
 
 	/* Re-enable displaying user input. */
 	system("stty echo");
+
 	showcursor();
 
 	setColor(EC_COLOR); /* Display readline prompt in EC_COLOR */
