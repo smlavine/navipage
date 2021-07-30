@@ -177,16 +177,14 @@ int rows;
 static int
 add_directory(const char *const path, const int recurse)
 {
-	int errsv;
 	struct dirent *d;
 	DIR *dirp;
 	char *newpath;
 
 	dirp = opendir(path);
 	if (dirp == NULL) {
-		errsv = errno;
 		fprintf(stderr, "%s: cannot opendir '%s': %s\n",
-				argv0, path, strerror(errsv));
+				argv0, path, strerror(errno));
 		return -1;
 	}
 
@@ -216,9 +214,9 @@ add_directory(const char *const path, const int recurse)
 		free(newpath);
 	}
 	closedir(dirp);
-	if ((errsv = errno) != 0) {
+	if (errno != 0) {
 		fprintf(stderr, "%s: stopping readdir '%s': %s\n",
-				argv0, path, strerror(errsv));
+				argv0, path, strerror(errno));
 		return -1;
 	}
 
@@ -235,14 +233,12 @@ add_directory(const char *const path, const int recurse)
 static int
 add_path(const char *path, const int recurse)
 {
-	int errsv;
 	char **realloc_check;
 	struct stat statbuf;
 
 	if (stat(path, &statbuf) == -1) {
-		errsv = errno;
 		fprintf(stderr, "%s: cannot stat '%s': %s\n",
-				argv0, path, strerror(errsv));
+				argv0, path, strerror(errno));
 		return -1;
 	}
 	if (S_ISDIR(statbuf.st_mode)) {
