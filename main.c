@@ -35,6 +35,7 @@
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
+/* TODO: move these defines to appropriate places when main.c is split. */
 #define ST_SIZE_INCR 10
 
 #define URL   "https://sr.ht/~smlavine/navipage"
@@ -196,6 +197,8 @@ add_directory(const char *const path, const int recurse)
 				strcmp(d->d_name, "..") == 0) {
 			continue;
 		}
+
+		/* TODO: look into using nftw() */
 
 		newpath = malloc(sizeof(*newpath) *
 				(strlen(path) + strlen(d->d_name) + 2));
