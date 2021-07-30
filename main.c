@@ -36,6 +36,20 @@
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 #define ST_SIZE_INCR 10
+
+#define URL   "https://sr.ht/~smlavine/navipage"
+#define USAGE "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n" \
+	"This program is free software (GPLv3+); see 'man navipage'\n" \
+	"or <" URL "> for more information.\n" \
+	"Usage: navipage [-dhnrsv] files...\n" \
+	"Options:\n" \
+	"    -d  Enable debug output.\n" \
+	"    -h  Print this help and exit.\n" \
+	"    -n  Display line numbers.\n" \
+	"    -r  Infinitely recurse in directories.\n" \
+	"    -s  Run $NAVIPAGE_SH before reading files.\n" \
+	"    -v  Print version and exit."
+
 enum add_path_recurse_argument {
 	NO_RECURSE = 0,
 	RECURSE = 1
@@ -154,19 +168,6 @@ Flags flags;
 FileList filel;
 BufferList bufl;
 int rows;
-#define URL "https://sr.ht/~smlavine/navipage"
-static const char *USAGE =
-"Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n"
-"This program is free software (GPLv3+); see 'man navipage'\n"
-"or <" URL "> for more information.\n"
-"Usage: navipage [-dhnrsv] files...\n"
-"Options:\n"
-"    -d  Enable debug output.\n"
-"    -h  Print this help and exit.\n"
-"    -n  Display line numbers.\n"
-"    -r  Infinitely recurse in directories.\n"
-"    -s  Run $NAVIPAGE_SH before reading files.\n"
-"    -v  Print version and exit.";
 
 /*
  * Append the files in the directory called path to filel. Return value shall
