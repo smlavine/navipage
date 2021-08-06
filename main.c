@@ -152,7 +152,6 @@ static void info(void);
 static int init_buffer(Buffer *const, const char *const);
 static void input_loop(void);
 static void outofmem(const int);
-static void quit(const int);
 static void redraw(void);
 static int scroll(const int);
 static void scroll_to_top(void);
@@ -479,13 +478,13 @@ handle_signals(int sig)
 {
 	switch (sig) {
 	case SIGHUP:
-		quit(EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 		break;
 	case SIGINT:
 	case SIGTERM:
 	case SIGQUIT:
 	default:
-		quit(EXIT_SUCCESS);
+		exit(EXIT_SUCCESS);
 		break;
 	}
 }
@@ -644,7 +643,7 @@ input_loop(void)
 			toggle_numbers();
 			break;
 		case 'q':
-			quit(EXIT_SUCCESS);
+			exit(EXIT_SUCCESS);
 			break;
 		case 'r':
 			redraw();
@@ -666,16 +665,6 @@ static void
 outofmem(const int code)
 {
 	fprintf(stderr, "%s: error: out of memory\n", argv0);
-	exit(code);
-}
-
-/*
- * Quit navipage.
- */
-static void
-quit(const int code)
-{
-	cleanup();
 	exit(code);
 }
 
@@ -780,6 +769,8 @@ main(int argc, char *argv[])
 	struct sigaction sa;
 
 	argv0 = argv[0];
+
+	atexit(cleanup);
 
 	/* Register signal handler. */
 	if (sa.sa_handler = handle_signals,
