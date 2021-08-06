@@ -407,7 +407,7 @@ display_buffer(const Buffer *const b)
 
 	/* Print status-bar information. */
 	gotoxy(1, rows);
-	printf("#%d/%d  %s", bufl.n + 1, bufl.amt, filel.v[bufl.n]);
+	printf("#%d/%d %s", bufl.n + 1, bufl.amt, filel.v[bufl.n]);
 
 	fflush(stdout);
 }
