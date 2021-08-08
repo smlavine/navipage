@@ -184,7 +184,7 @@ add_directory(const char *const path, const int recurse)
 	char *newpath;
 
 	if ((dirp = opendir(path)) == NULL) {
-		fprintf(stderr, "%s: cannot opendir '%s': %s\n",
+		fprintf(stderr, "%s: cannot opendir %s: %s\n",
 				argv0, path, strerror(errno));
 		return -1;
 	}
@@ -211,7 +211,7 @@ add_directory(const char *const path, const int recurse)
 	}
 	closedir(dirp);
 	if (errno != 0) {
-		fprintf(stderr, "%s: stopping readdir '%s': %s\n",
+		fprintf(stderr, "%s: stopping readdir %s: %s\n",
 				argv0, path, strerror(errno));
 		return -1;
 	}
@@ -233,13 +233,13 @@ add_path(const char *path, const int recurse)
 	struct stat statbuf;
 
 	if (stat(path, &statbuf) == -1) {
-		fprintf(stderr, "%s: cannot stat '%s': %s\n",
+		fprintf(stderr, "%s: cannot stat %s: %s\n",
 				argv0, path, strerror(errno));
 		return -1;
 	}
 	if (S_ISDIR(statbuf.st_mode)) {
 		if (!recurse) {
-			fprintf(stderr, "%s: no -r; omitting directory '%s'\n",
+			fprintf(stderr, "%s: no -r; omitting directory %s\n",
 					argv0, path);
 			return -1;
 		}
@@ -248,7 +248,7 @@ add_path(const char *path, const int recurse)
 	}
 
 	if (!S_ISREG(statbuf.st_mode)) {
-		fprintf(stderr, "%s: cannot read '%s': not a regular file\n",
+		fprintf(stderr, "%s: cannot read %s: not a regular file\n",
 				argv0, path);
 		return -1;
 	}
@@ -529,7 +529,7 @@ init_buffer(Buffer *const b, const char *const path)
 	if ( (errfunc = "fopen", (fp = fopen(path, "r")) == NULL) ||
 	     (errfunc = "fseek", fseek(fp, 0L, SEEK_END) == -1)   ||
 	     (errfunc = "ftell", (b->length = ftell(fp)) == -1) ) {
-		error_buffer(b, "%s: cannot %s '%s': %s\n",
+		error_buffer(b, "%s: cannot %s %s: %s\n",
 				argv0, errfunc, path, strerror(errno));
 		return -1;
 	}
