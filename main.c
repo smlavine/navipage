@@ -770,8 +770,6 @@ main(int argc, char *argv[])
 
 	argv0 = argv[0];
 
-	atexit(cleanup);
-
 	/* Register signal handler. */
 	if (sa.sa_handler = handle_signals,
 			sigaction(SIGINT, &sa, NULL)  == -1 ||
@@ -858,6 +856,8 @@ main(int argc, char *argv[])
 		outofmem(EXIT_FAILURE);
 	for (i = 0; i < bufl.amt; i++)
 		init_buffer(&bufl.v[i], filel.v[i]);
+
+	atexit(cleanup);
 
 	/* Set some things with the terminal. */
 	system("stty -echo"); /* Disable user input showing on the screen. */
