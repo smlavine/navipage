@@ -866,7 +866,7 @@ main(int argc, char *argv[])
 	update_rows();
 	display_buffer(&bufl.v[bufl.n]);
 
-	input_loop(); /* Doesn't return */
+	input_loop(); /* Doesn't return, but just in case... */
 
 	return EXIT_SUCCESS;
 }
