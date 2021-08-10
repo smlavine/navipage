@@ -26,6 +26,7 @@
 #include <readline/history.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -141,7 +142,7 @@ typedef struct {
 static int add_directory(const char *const, const int);
 static int add_path(const char *const, const int);
 static int change_buffer(const int);
-static void cleanup(void);
+static void cleanup_display(void);
 static void clear_current_line(void);
 static int compare_path_basenames(const void *, const void *);
 static void display_buffer(const Buffer *const);
@@ -153,11 +154,13 @@ static int init_buffer(Buffer *const, const char *const);
 static void input_loop(void);
 static void outofmem(const int);
 static void redraw(void);
+static void restore_terminal(void);
 static int scroll(const int);
 static void scroll_to_top(void);
 static void scroll_to_bottom(void);
 static void toggle_numbers(void);
 static void update_rows(void);
+static void update_terminal(void);
 static void usage(void);
 static void version(void);
 
@@ -165,6 +168,18 @@ static void version(void);
  * because argv[0] is going to be modiifed by getopt.
  */
 char *argv0;
+
+/* To be able to read files from stdin, we read user input from /dev/tty. */
+FILE *tty;
+int ttyno;
+
+/* original_term is the state of the terminal at the start of the program.
+ * While reading user input, the terminal is set to reading_input_term,
+ * with some different attributes set for that purpose.
+ * Before invoking readline (for example in execute_command()) the terminal
+ * state is temporarily restored to that in original_term.
+ */
+struct termios original_term, reading_input_term;
 
 Flags flags;
 FileList filel;
@@ -301,14 +316,24 @@ change_buffer(const int new)
 }
 
 /*
- * Cleans up terminal settings and the like which were modified by navipage.
- * Usually called before exiting the program.
+ * Resets the display of the terminal from ways it was modified while being
+ * drawn to during the run of the program.
+ *
+ * While both this function and restore_terminal() reset the "state" to before
+ * this program was invoked, the reason they are separate is that this function
+ * is registered with atexit(3) immediately before display_buffer() is called.
+ * This function will only be called once there is a buffer, status bar etc.
+ * being displayed. However, restore_terminal() is registed after the terminal
+ * state is stored with tcgetattr() and modified with tcsetattr(). There are
+ * other things done between these two registrations (see main()) where it
+ * would be necessary to call restore_terminal() on error, but inappropriate to
+ * call this function.
+ *
+ * This function is registered with atexit(3).
  */
 static void
-cleanup(void)
+cleanup_display(void)
 {
-	system("stty sane");
-	showcursor();
 	/* Return the shell prompt to the beginning of the next line. */
 	putchar('\n');
 }
@@ -444,12 +469,11 @@ execute_command(void)
 	gotoxy(1, rows);
 	clear_current_line();
 
-	/* Re-enable displaying user input. */
-	system("stty echo");
-
-	showcursor();
+	/* We want to be able to see characters entered in readline. */
+	restore_terminal();
 
 	setColor(EC_COLOR); /* Display readline prompt in EC_COLOR */
+	rl_instream = tty;
 	if ((line = readline("!")) != NULL) {
 		resetColor();
 		fflush(stdout);
@@ -457,14 +481,14 @@ execute_command(void)
 		free(line);
 	}
 
-	system("stty -echo");
+	update_terminal();
+
 	gotoxy(1, rows);
 	/* -1 means to use the current background color. */
 	colorPrint(EC_COLOR, -1, "navipage: press any key to return.");
 	fflush(stdout);
-	anykey(NULL);
+	getc(tty); /* can't use anykey(NULL) because it reads from stdin */
 
-	hidecursor();
 	resetColor();
 	display_buffer(&bufl.v[bufl.n]);
 	/* fflush(stdout) -- unneeded, is ran at the end of display_buffer() */
@@ -603,7 +627,7 @@ static void
 input_loop(void)
 {
 	for (;;) {
-		switch (getch()) {
+		switch (getc(tty)) {
 		case 'g':
 			scroll_to_top();
 			break;
@@ -678,6 +702,21 @@ redraw(void)
 	display_buffer(&bufl.v[bufl.n]);
 }
 
+/* Restores the terminal to the state it was before
+ * modified with tcsetattr(3) and rogueutil functions.
+ *
+ * See the comment documenting cleanup_display() for the
+ * reasoning of separating this function and that one.
+ *
+ * This function is registered with atexit(3).
+ */
+static void
+restore_terminal(void)
+{
+	tcsetattr(ttyno, TCSANOW, &original_term);
+	showcursor();
+}
+
 /*
  * Scroll by 'offset' lines in the buffer. On success, 0 is returned;
  * otherwise the line number that would have been made the top of the screen
@@ -734,13 +773,44 @@ toggle_numbers(void)
 }
 
 /*
- * Update the 'rows' global variable, usually involving the rogueutil function
- * trows().
+ * Update the 'rows' global variable.
+ * This code is mostly copied from the rogueutil function trows(), but using
+ * ttyno instead of STDIN_FILENO, and without a _WIN32 preprocessor block.
  */
 static void
 update_rows(void)
 {
-	rows = trows();
+#ifdef TIOCGSIZE
+	struct ttysize ts;
+
+	ioctl(ttyno, TIOCGSIZE, &ts);
+	rows = ts.ts_lines;
+#elif defined(TIOCGWINSZ)
+	struct winsize ts;
+
+	ioctl(ttyno, TIOCGWINSZ, &ts);
+	rows = ts.ws_row;
+#else /* TIOCGSIZE */
+	rows = -1;
+#endif /* TIOCGSIZE */
+}
+
+/*
+ * Set some terminal attributes that make it easier to display buffers and
+ * receive user input.
+ *
+ * See the assignment of reading_input_term in main() for what these attributes
+ * are.
+ */
+static void
+update_terminal()
+{
+	if (tcsetattr(ttyno, TCSANOW, &reading_input_term) == -1) {
+		fprintf(stderr, "%s: tcsetattr failed: %s\n",
+				argv0, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	hidecursor();
 }
 
 /*
@@ -780,6 +850,27 @@ main(int argc, char *argv[])
 				argv0, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
+
+	/* Open /dev/tty and set some attributes of the terminal. */
+	if ((tty = fopen("/dev/tty", "r")) == NULL) {
+		fprintf(stderr, "%s: cannot fopen /dev/tty: %s\n",
+				argv0, strerror(errno));
+		return -1;
+	}
+	ttyno = fileno(tty);
+
+	if (tcgetattr(ttyno, &original_term) == -1) {
+		fprintf(stderr, "%s: tcgetattr failed: %s\n",
+				argv0, strerror(errno));
+		return -1;
+	}
+
+	reading_input_term = original_term;
+	reading_input_term.c_lflag &= ~(ICANON | ECHO);
+
+	update_terminal();
+
+	atexit(restore_terminal);
 
 	/* Handle options. */
 	while ((c = getopt(argc, argv, "dhnrsv")) != -1) {
@@ -857,11 +948,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < bufl.amt; i++)
 		init_buffer(&bufl.v[i], filel.v[i]);
 
-	atexit(cleanup);
-
-	/* Set some things with the terminal. */
-	system("stty -echo"); /* Disable user input showing on the screen. */
-	hidecursor();
+	atexit(cleanup_display);
 
 	update_rows();
 	display_buffer(&bufl.v[bufl.n]);
