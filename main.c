@@ -932,7 +932,8 @@ main(int argc, char *argv[])
 
 	/* Exit the program if no files were read. */
 	if (filel.amt == 0) {
-		usage();
+		if (argc == 0)
+			usage();
 		exit(EXIT_FAILURE);
 	}
 
