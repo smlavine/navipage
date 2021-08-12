@@ -2,26 +2,31 @@
 
 include config.mk
 
-CFILES = main.c
-HFILES = rogueutil.h
+SRC = main.c
+OBJ = $(SRC:.c=.o)
 
 all: options navipage
 
 options:
+	@echo 'navipage build options:'
 	@echo "CFLAGS      = $(CFLAGS)"
-	@echo "OPTIMFLAGS  = $(OPTIMFLAGS)"
 	@echo "DEBUGFLAGS  = $(DEBUGFLAGS)"
+	@echo "CC          = $(CC)"
 
-navipage: $(CFILES) $(HFILES)
-	$(CC) -o $@ $(CFILES) $(CFLAGS) $(OPTIMFLAGS)
+navipage.o: rogueutil.h
 
-debug: $(CFILES) $(HFILES)
-	$(CC) -o navipage-$@ $(CFILES) $(CFLAGS) $(DEBUGFLAGS)
+$(OBJ): config.mk
+
+navipage: $(OBJ)
+	$(CC) -o $@ $(OBJ) $(LDFLAGS)
+
+debug: $(OBJ)
+	$(CC) -o navipage-$@ $(OBJ) $(LDFLAGS) $(DEBUGDLAGS)
 
 clean:
-	rm -f navipage navipage-debug
+	rm -f navipage navipage-debug $(OBJ)
 
-install: navipage
+install: all
 	mkdir -p $(PREFIX)/bin
 	cp -f navipage $(PREFIX)/bin
 	chmod 755 $(PREFIX)/bin
@@ -30,7 +35,6 @@ install: navipage
 	chmod 644 $(MANPREFIX)/man1/navipage.1
 
 uninstall:
-	rm -f $(PREFIX)/bin/navipage\
-		$(MANPREFIX)/man1/navipage.1
+	rm -f $(PREFIX)/bin/navipage $(MANPREFIX)/man1/navipage.1
 
 .PHONY: all options navipage debug clean install uninstall
