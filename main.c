@@ -154,7 +154,6 @@ static void handle_signals(const int);
 static void info(void);
 static int init_buffer(Buffer *const, const char *const);
 static void input_loop(void);
-static void outofmem(const int);
 static void redraw(void);
 static void restore_terminal(void);
 static int scroll(const int);
@@ -195,11 +194,8 @@ add_directory(const char *const path, const int recurse)
 	DIR *dirp;
 	char *newpath;
 
-	if ((dirp = opendir(path)) == NULL) {
-		fprintf(stderr, "%s: cannot opendir %s: %s\n",
-				argv0, path, strerror(errno));
-		return -1;
-	}
+	if ((dirp = opendir(path)) == NULL)
+		return ewarn("cannot opendir %s", path), -1;
 
 	/* Reset errno in order to detect readdir/closedir errors. */
 	errno = 0;
@@ -214,19 +210,17 @@ add_directory(const char *const path, const int recurse)
 		newpath = malloc(sizeof(*newpath) *
 				(strlen(path) + strlen(d->d_name) + 2));
 		if (newpath == NULL)
-			outofmem(EXIT_FAILURE);
+			err(EXIT_FAILURE, "malloc failed");
 		sprintf(newpath, "%s/%s", path, d->d_name);
 
 		add_path(newpath, recurse);
 
 		free(newpath);
 	}
+	if (errno != 0)
+		return ewarn("cannot readdir %s", path), -1;
+
 	closedir(dirp);
-	if (errno != 0) {
-		fprintf(stderr, "%s: stopping readdir %s: %s\n",
-				argv0, path, strerror(errno));
-		return -1;
-	}
 
 	return 0;
 }
@@ -244,26 +238,15 @@ add_path(const char *path, const int recurse)
 	char **realloc_check;
 	struct stat statbuf;
 
-	if (stat(path, &statbuf) == -1) {
-		fprintf(stderr, "%s: cannot stat %s: %s\n",
-				argv0, path, strerror(errno));
-		return -1;
-	}
-	if (S_ISDIR(statbuf.st_mode)) {
-		if (!recurse) {
-			fprintf(stderr, "%s: no -r; omitting directory %s\n",
-					argv0, path);
-			return -1;
-		}
+	if (stat(path, &statbuf) == -1)
+		return ewarn("cannot stat %s", path), -1;
 
-		return add_directory(path, recurse);
-	}
+	if (S_ISDIR(statbuf.st_mode))
+		return recurse ? add_directory(path, recurse) :
+			(warn("no -r; omitting directory %s\n", path), -1);
 
-	if (!S_ISREG(statbuf.st_mode)) {
-		fprintf(stderr, "%s: cannot read %s: not a regular file\n",
-				argv0, path);
-		return -1;
-	}
+	if (!S_ISREG(statbuf.st_mode))
+		return warn("cannot read %s: not a regular file\n", path), -1;
 
 	/* Add file path to the list. */
 
@@ -275,7 +258,7 @@ add_path(const char *path, const int recurse)
 
 	/* Make sure that realloc is valid before reallocating the filel. */
 	if ((realloc_check = realloc(filel.v, filel.size)) == NULL)
-		outofmem(EXIT_FAILURE);
+		err(EXIT_FAILURE, "realloc failed");
 	else
 		filel.v = realloc_check;
 
@@ -283,7 +266,7 @@ add_path(const char *path, const int recurse)
 	filel.v[filel.amt] = malloc(sizeof(*filel.v[filel.amt]) *
 			(1 + strlen(path)));
 	if (filel.v[filel.amt] == NULL)
-		outofmem(EXIT_FAILURE);
+		err(EXIT_FAILURE, "malloc failed");
 
 	filel.used += sizeof(*filel.v);
 
@@ -375,7 +358,7 @@ compare_path_basenames(const void *p1, const void *p2)
 	copy[0] = strdup(*(const char **)p1);
 	copy[1] = strdup(*(const char **)p2);
 	if (copy[0] == NULL || copy[1] == NULL)
-		outofmem(EXIT_FAILURE);
+		err(EXIT_FAILURE, "strdup failed");
 
 	base[0] = basename(copy[0]);
 	base[1] = basename(copy[1]);
@@ -444,7 +427,7 @@ error_buffer(Buffer *const b, const char *format, ...)
 
 	b->size = 128;
 	if ((b->text = malloc(sizeof(*b->text) * b->size)) == NULL)
-		outofmem(EXIT_FAILURE);
+		err(EXIT_FAILURE, "malloc failed");
 
 	va_start(ap, format);
 	vsnprintf(b->text, b->size, format, ap);
@@ -558,7 +541,7 @@ init_buffer(Buffer *const b, const char *const path)
 	rewind(fp);
 	b->size = b->length + 1;
 	if ((b->text = malloc(sizeof(*b->text) * b->size)) == NULL)
-		outofmem(EXIT_FAILURE);
+		err(EXIT_FAILURE, "malloc failed");
 	if (fread(b->text, sizeof(char), b->length, fp) != (size_t)b->length) {
 		error_buffer(b, "%s: fread failed on '%s'\n", argv0, path);
 		return -1;
@@ -584,7 +567,7 @@ init_buffer(Buffer *const b, const char *const path)
 	 */
 	b->st_size = ST_SIZE_INCR;
 	if ((b->st = malloc(sizeof(*b->st) * b->st_size)) == NULL)
-		outofmem(EXIT_FAILURE);
+		err(EXIT_FAILURE, "malloc failed");
 
 	/* The first line starts at the first character of the text, so we
 	 * start there.
@@ -606,7 +589,7 @@ init_buffer(Buffer *const b, const char *const path)
 			realloc_check = realloc(b->st,
 					sizeof(*b->st) * b->st_size);
 			if (realloc_check == NULL)
-				outofmem(EXIT_FAILURE);
+				err(EXIT_FAILURE, "realloc failed");
 			else
 				b->st = realloc_check;
 		}
@@ -674,19 +657,6 @@ input_loop(void)
 			break;
 		}
 	}
-}
-
-/*
- * Print a line that we are "out of memory" and exit navipage. This is usually
- * called in the case of a malloc error.
- * TODO: Write something better and less ad-hoc than this, using strerror() and
- * related functions. Maybe just use BSD errx functions?
- */
-static void
-outofmem(const int code)
-{
-	fprintf(stderr, "%s: error: out of memory\n", argv0);
-	exit(code);
 }
 
 /*
@@ -802,11 +772,8 @@ update_rows(void)
 static void
 update_terminal()
 {
-	if (tcsetattr(ttyno, TCSANOW, &reading_input_term) == -1) {
-		fprintf(stderr, "%s: tcsetattr failed: %s\n",
-				argv0, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if (tcsetattr(ttyno, TCSANOW, &reading_input_term) == -1)
+		err(EXIT_FAILURE, "tcsetattr failed");
 	hidecursor();
 }
 
@@ -842,25 +809,16 @@ main(int argc, char *argv[])
 			sigaction(SIGINT, &sa, NULL)  == -1 ||
 			sigaction(SIGTERM, &sa, NULL) == -1 ||
 			sigaction(SIGQUIT, &sa, NULL) == -1 ||
-			sigaction(SIGHUP, &sa, NULL)  == -1) {
-		fprintf(stderr, "%s: cannot sigaction: %s\n",
-				argv0, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+			sigaction(SIGHUP, &sa, NULL)  == -1)
+		err(EXIT_FAILURE, "cannot sigaction");
 
 	/* Open /dev/tty and set some attributes of the terminal. */
-	if ((tty = fopen("/dev/tty", "r")) == NULL) {
-		fprintf(stderr, "%s: cannot fopen /dev/tty: %s\n",
-				argv0, strerror(errno));
-		return -1;
-	}
+	if ((tty = fopen("/dev/tty", "r")) == NULL)
+		err(EXIT_FAILURE, "cannot fopen /dev/tty");
 	ttyno = fileno(tty);
 
-	if (tcgetattr(ttyno, &original_term) == -1) {
-		fprintf(stderr, "%s: tcgetattr failed: %s\n",
-				argv0, strerror(errno));
-		return -1;
-	}
+	if (tcgetattr(ttyno, &original_term) == -1)
+		err(EXIT_FAILURE, "tcgetattr failed");
 
 	reading_input_term = original_term;
 	reading_input_term.c_lflag &= ~(ICANON | ECHO);
@@ -917,7 +875,7 @@ main(int argc, char *argv[])
 	filel.used = 0;
 	if (filel.size = sizeof(*filel.v) * FILEL_SIZE_INCR,
 			(filel.v = malloc(filel.size)) == NULL)
-		outofmem(EXIT_FAILURE);
+		err(EXIT_FAILURE, "malloc failed");
 
 	/* Add the files at $NAVIPAGE_DIR to filel. */
 	if (argc == 0 && (envstr = getenv("NAVIPAGE_DIR")) != NULL)
@@ -942,7 +900,7 @@ main(int argc, char *argv[])
 	bufl.amt = filel.amt;
 	bufl.n = 0;
 	if ((bufl.v = malloc(sizeof(*bufl.v) * bufl.amt)) == NULL)
-		outofmem(EXIT_FAILURE);
+		err(EXIT_FAILURE, "malloc failed");
 	for (i = 0; i < bufl.amt; i++)
 		init_buffer(&bufl.v[i], filel.v[i]);
 
