@@ -33,6 +33,8 @@
 
 #include "rogueutil.h"
 
+#include "err.h"
+
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
@@ -163,11 +165,6 @@ static void update_rows(void);
 static void update_terminal(void);
 static void usage(void);
 static void version(void);
-
-/* Name of the program, as it is executed by the user. This is declared here
- * because argv[0] is going to be modiifed by getopt.
- */
-char *argv0;
 
 /* To be able to read files from stdin, we read user input from /dev/tty. */
 FILE *tty;

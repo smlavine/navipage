@@ -2,7 +2,7 @@
 
 include config.mk
 
-SRC = main.c
+SRC = err.c main.c
 OBJ = $(SRC:.c=.o)
 
 all: options navipage
@@ -12,6 +12,8 @@ options:
 	@echo "CFLAGS      = $(CFLAGS)"
 	@echo "DEBUGFLAGS  = $(DEBUGFLAGS)"
 	@echo "CC          = $(CC)"
+
+err.o: err.h
 
 navipage.o: rogueutil.h
 
