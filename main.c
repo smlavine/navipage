@@ -533,6 +533,7 @@ init_buffer(Buffer *const b, const char *const path)
 	if ( (errfunc = "fopen", (fp = fopen(path, "r")) == NULL) ||
 	     (errfunc = "fseek", fseek(fp, 0L, SEEK_END) == -1)   ||
 	     (errfunc = "ftell", (b->length = ftell(fp)) == -1) ) {
+		ewarn("cannot %s %s", errfunc, path);
 		error_buffer(b, "%s: cannot %s %s: %s\n",
 				argv0, errfunc, path, strerror(errno));
 		return -1;
@@ -543,7 +544,8 @@ init_buffer(Buffer *const b, const char *const path)
 	if ((b->text = malloc(sizeof(*b->text) * b->size)) == NULL)
 		err(EXIT_FAILURE, "malloc failed");
 	if (fread(b->text, sizeof(char), b->length, fp) != (size_t)b->length) {
-		error_buffer(b, "%s: fread failed on '%s'\n", argv0, path);
+		warn("fread failed on %s\n", path);
+		error_buffer(b, "%s: fread failed on %s\n", argv0, path);
 		return -1;
 	}
 
