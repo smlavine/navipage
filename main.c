@@ -288,6 +288,7 @@ change_buffer(const int new)
 {
 	if (new >= 0 && new < bufl.amt) {
 		bufl.n = new;
+		cls();
 		display_buffer(&bufl.v[bufl.n]);
 		return 0;
 	}
@@ -909,6 +910,7 @@ main(int argc, char *argv[])
 	atexit(cleanup_display);
 
 	update_rows();
+	cls();
 	display_buffer(&bufl.v[bufl.n]);
 
 	input_loop(); /* Doesn't return, but just in case... */
