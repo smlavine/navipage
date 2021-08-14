@@ -53,7 +53,7 @@ See ```LICENSE.rogueutil``` for details.
 
 # Contributing
 
-To track the project, see <<https://sr.ht/~smlavine/navipage>>.
+To follow the project, see <<https://sr.ht/~smlavine/navipage>>.
 
 To browse the source code repository, see
 <<https://git.sr.ht/~smlavine/navipage>>.
