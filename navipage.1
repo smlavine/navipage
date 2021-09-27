@@ -124,10 +124,11 @@ Execute a command with sh.
 # videos every morning by an email, which is easier to send when ran on the
 # server where the email is hosted.
 
-server="user@example.notreal"
-serverdir="backups"
+user='omnavi'
+server='example.notreal'
+serverdir='backups'
 
-rsync -av "${server}:${serverdir}/" "$NAVIPAGE_DIR"
+rsync -av "${user}@${server}:${serverdir}/" "$NAVIPAGE_DIR"
 .EE
 .SH INSPIRATION
 My original plan with
