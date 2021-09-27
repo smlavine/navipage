@@ -18,6 +18,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <stdarg.h>
+
 extern char *argv0;
 
 /* These functions are declared in the order they are called by each other. */
