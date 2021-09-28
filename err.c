@@ -56,7 +56,6 @@ char *argv0;
 void
 vwarn(const char *fmt, va_list ap)
 {
-
 	fprintf(stderr, "%s: ", argv0);
 	vfprintf(stderr, fmt, ap);
 }
@@ -71,7 +70,6 @@ vewarn(const char *fmt, va_list ap)
 		fputs(": ", stderr);
 	fprintf(stderr, "%s\n", errstr);
 }
-
 
 void
 verr(const int code, const char *fmt, va_list ap)
@@ -104,7 +102,6 @@ ewarn(const char *fmt, ...)
 void
 err(const int code, const char *fmt, ...)
 {
-
 	va_list ap;
 	
 	va_start(ap, fmt);
