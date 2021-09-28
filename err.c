@@ -28,29 +28,35 @@
 
 char *argv0;
 
-/*
+/***********************************************************************
  * This file contains six error and warning functions:
- * vwarn(), vewarn(), and verr(), as well as variadic wrappers for each.
- * 
- * vwarn() prints argv0 to stderr (which should be set by the caller to
- * the name of the program), followed by a colon and a space, followed by
- * a message formatted by a call to vfprintf(3) with the arguments given.
+ * vwarn(), vewarn(), and verr(), plus variadic wrappers for each.
  *
- * vewarn() calls vwarn(), and then, if the given format string is neither
- * NULL nor empty, prints to stderr a colon and a space; then prints to
- * stderr the value of strerror(errno) as it was at the call of the function,
- * followed by a newline. strerror(3) MUST be called at the top of the
- * function because other functions called in the course of execution could
- * modify the value of errno.
+ ***********************************************************************
+ * vwarn() prints argv0, ": ", and a message formatted from the given
+ * format string and va_list.
  *
+ * warn() is a variadic wrapper for vwarn().
+ *
+ ***********************************************************************
+ * vewarn() calls vwarn(), then prints ": " if the format string is
+ * neither NULL nor empty, the value of strerror(errno), and a newline.
+ *
+ * ewarn() is a variadic wrapper for vewarn().
+ *
+ ***********************************************************************
  * verr() calls vewarn() and exits the program with the provided code.
  *
- * warn() is a variadic wrapper for vwarn(), ewarn() is one for vewarn(), and
- * err() is one for verr().
+ * err() is a variadic wrapper for verr().
  *
- * Some functions in this file are named identically to functions provided by
- * libbsd's err.h, but be aware that this file does NOT implement those
- * functions, and these functions may behave completely differently.
+ ***********************************************************************
+ * If argv0 is not set by the caller, behavior is undefined.
+ *
+ * Some functions in this file are named the same as functions
+ * provided by libbsd's err.h. This file does NOT implement those
+ * functions, and might behave completely differently.
+ *
+ ***********************************************************************
  */
 
 void
@@ -63,6 +69,10 @@ vwarn(const char *fmt, va_list ap)
 void
 vewarn(const char *fmt, va_list ap)
 {
+	/* strerror(3) must be called before anything else is done,
+	 * otherwise errno could be modified by function calls made
+	 * between when vewarn() was called and when output is printed.
+	 */
 	const char *errstr = strerror(errno);
 
 	vwarn(fmt, ap);
