@@ -35,9 +35,6 @@
 
 #include "err.h"
 
-#define MAX(A, B) ((A) > (B) ? (A) : (B))
-#define MIN(A, B) ((A) < (B) ? (A) : (B))
-
 /* TODO: move these defines to appropriate places when main.c is split. */
 #define ST_SIZE_INCR 10
 #define FILEL_SIZE_INCR 4
@@ -387,7 +384,7 @@ display_buffer(const Buffer *const b)
 	 * print the amount of lines in the file if that is less than
 	 * `rows - 1`, to avoid a segfault.
 	 */
-	linestoprint = MIN(b->st_amt, rows - 1);
+	linestoprint = (b->st_amt < rows - 1 ? b->st_amt : rows - 1);
 
 	for (i = 0; i < linestoprint; i++) {
 		int linelen;
