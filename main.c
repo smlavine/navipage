@@ -195,7 +195,7 @@ add_directory(const char *const path, const int recurse)
 	char *newpath;
 
 	if ((dirp = opendir(path)) == NULL)
-		return ewarn("cannot opendir %s", path), -1;
+		return (ewarn("cannot opendir %s", path), -1);
 
 	/* Reset errno in order to detect readdir/closedir errors. */
 	errno = 0;
@@ -218,7 +218,7 @@ add_directory(const char *const path, const int recurse)
 		free(newpath);
 	}
 	if (errno != 0)
-		return ewarn("cannot readdir %s", path), -1;
+		return (ewarn("cannot readdir %s", path), -1);
 
 	closedir(dirp);
 
@@ -239,14 +239,14 @@ add_path(const char *path, const int recurse)
 	struct stat statbuf;
 
 	if (stat(path, &statbuf) == -1)
-		return ewarn("cannot stat %s", path), -1;
+		return (ewarn("cannot stat %s", path), -1);
 
 	if (S_ISDIR(statbuf.st_mode))
 		return recurse ? add_directory(path, recurse) :
 			(warn("no -r; omitting directory %s\n", path), -1);
 
 	if (!S_ISREG(statbuf.st_mode))
-		return warn("cannot read %s: not a regular file\n", path), -1;
+		return (warn("cannot read %s: not a regular file\n", path), -1);
 
 	/* Add file path to the list. */
 
