@@ -58,6 +58,8 @@ To follow the project, see <https://sr.ht/~smlavine/navipage>.
 To browse the source code repository, see
 <https://git.sr.ht/~smlavine/navipage>.
 
-To discuss navipage, suggest features, submit patches, or report bugs,
-use the public mailing list at
-<https://lists.sr.ht/~smlavine/navipage>.
+For development discussion and patches related to the navipage project,
+see the mailing list at <https://lists.sr.ht/~smlavine/navipage-devel>.
+
+For announcements related to the navipage project, see the mailing list
+at <https://lists.sr.ht/~smlavine/navipage-announce>.
