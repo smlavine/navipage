@@ -25,7 +25,7 @@ needs.
 
 # Copyright
 
-Copyright (C) 2021 Sebastian LaVine <<mail@smlavine.com>>
+Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>
 
 navipage is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with navipage. If not, see <<https://www.gnu.org/licenses/>>.
+along with navipage. If not, see <https://www.gnu.org/licenses/>.
 
 Version 3 of the GNU General Public License is distributed with navipage
 in the ```LICENSE``` file.
@@ -53,11 +53,11 @@ See ```LICENSE.rogueutil``` for details.
 
 # Contributing
 
-To follow the project, see <<https://sr.ht/~smlavine/navipage>>.
+To follow the project, see <https://sr.ht/~smlavine/navipage>.
 
 To browse the source code repository, see
-<<https://git.sr.ht/~smlavine/navipage>>.
+<https://git.sr.ht/~smlavine/navipage>.
 
 To discuss navipage, suggest features, submit patches, or report bugs,
 use the public mailing list at
-<<https://lists.sr.ht/~smlavine/navipage>>.
+<https://lists.sr.ht/~smlavine/navipage>.
