@@ -30,7 +30,8 @@ char *argv0;
  *
  ***********************************************************************
  * vewarn() calls vwarn(), then prints ": " if the format string is
- * neither NULL nor empty, the value of strerror(errno), and a newline.
+ * neither NULL nor empty, then prints the value of strerror(errno) and
+ * a newline.
  *
  * ewarn() is a variadic wrapper for vewarn().
  *
