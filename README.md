@@ -49,7 +49,7 @@ navipage uses the following libraries:
 - [GNU readline](https://tiswww.case.edu/php/chet/readline/rltop.html)
 - [rogueutil](https://github.com/sakhmatd/rogueutil)
   - rogueutil is licensed under the terms of the Apache license v2.0.
-See ```LICENSE.rogueutil``` for details.
+    See ```LICENSE.rogueutil``` for details.
 
 # Contributing
 
