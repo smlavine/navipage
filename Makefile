@@ -23,10 +23,10 @@ navipage: $(OBJ)
 	$(CC) -o $@ $(OBJ) $(LDFLAGS)
 
 debug: $(OBJ)
-	$(CC) -o navipage-$@ $(OBJ) $(LDFLAGS) $(DEBUGDLAGS)
+	$(CC) -o navipage $(OBJ) $(LDFLAGS) $(DEBUGDLAGS)
 
 clean:
-	rm -f navipage navipage-debug $(OBJ)
+	rm -f navipage $(OBJ)
 
 install: all
 	mkdir -p $(PREFIX)/bin
