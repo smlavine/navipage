@@ -22,9 +22,6 @@ $(OBJ): config.mk
 navipage: $(OBJ)
 	$(CC) -o $@ $(OBJ) $(LDFLAGS)
 
-debug: $(OBJ)
-	$(CC) -o navipage $(OBJ) $(LDFLAGS) $(DEBUGDLAGS)
-
 clean:
 	rm -f navipage $(OBJ)
 

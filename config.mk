@@ -9,11 +9,12 @@ MANPREFIX = $(PREFIX)/share/man
 INCS = -I$(PREFIX)/include
 LIBS = -lreadline
 
+#uncomment for debugging
+#DEBUGFLAGS = -ggdb -Og
+
 # flags
 CPPFLAGS = $(INCS) -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\"
-CFLAGS = -std=c99 -Wall -Wextra -Wpedantic
-#uncomment for debugging
-#CFLAGS = -g -Og -std=c99 -fsanitize=address -Wall -Wextra -Wpedantic
+CFLAGS = -std=c99 -Wall -Wextra -Wpedantic $(DEBUGFLAGS)
 LDFLAGS = -L$(PREFIX)/lib $(LIBS)
 
 # compiler and linker
