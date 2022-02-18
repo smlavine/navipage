@@ -23,6 +23,13 @@ sudo make uninstall
 Feel free to modify ```config.mk``` to fit your local installation
 needs.
 
+## Debugging
+
+To compile with debug symbols, uncomment the line defining DEBUGFLAGS in
+config.mk. Then ```make``` as usual. Line numbers and the like will be
+present when debugging with tools like ```gdb ./navipage``` or
+```valgrind --leak-checks=full --log-file=errors ./navipage```.
+
 # Copyright
 
 Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>
