@@ -800,13 +800,13 @@ main(int argc, char *argv[])
 {
 	int c, i;
 	char *envstr;
-	struct sigaction sa;
+	struct sigaction sa = {0};
 
 	argv0 = argv[0];
 
 	/* Register signal handler. */
-	if (sa.sa_handler = handle_signals,
-			sigaction(SIGINT, &sa, NULL)  == -1 ||
+	sa.sa_handler = handle_signals;
+	if (sigaction(SIGINT, &sa, NULL)  == -1 ||
 			sigaction(SIGTERM, &sa, NULL) == -1 ||
 			sigaction(SIGQUIT, &sa, NULL) == -1 ||
 			sigaction(SIGHUP, &sa, NULL)  == -1)
