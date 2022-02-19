@@ -25,8 +25,8 @@ needs.
 
 ## Debugging
 
-To compile with debug symbols, uncomment the line defining DEBUGFLAGS in
-config.mk. Then ```make``` as usual. Line numbers and the like will be
+To compile with debug symbols, set ```DEBUG``` before running
+```make```, like ```DEBUG=1 make```. Line numbers and the like will be
 present when debugging with tools like ```gdb ./navipage``` or
 ```valgrind --leak-check=full --log-file=errors ./navipage```.
 
