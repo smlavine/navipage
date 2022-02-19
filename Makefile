@@ -36,4 +36,4 @@ install: all
 uninstall:
 	rm -f $(PREFIX)/bin/navipage $(MANPREFIX)/man1/navipage.1
 
-.PHONY: all options navipage debug clean install uninstall
+.PHONY: all options navipage clean install uninstall
