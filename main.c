@@ -232,7 +232,6 @@ add_directory(const char *const path, const int recurse)
 static int
 add_path(const char *path, const int recurse)
 {
-	char **realloc_check;
 	struct stat statbuf;
 
 	if (stat(path, &statbuf) == -1)
@@ -253,11 +252,8 @@ add_path(const char *path, const int recurse)
 	while (filel.size < filel.used)
 		filel.size += sizeof(*filel.v) * FILEL_SIZE_INCR;
 
-	/* Make sure that realloc is valid before reallocating the filel. */
-	if ((realloc_check = realloc(filel.v, filel.size)) == NULL)
+	if ((filel.v = realloc(filel.v, filel.size)) == NULL)
 		err(EXIT_FAILURE, "realloc failed");
-	else
-		filel.v = realloc_check;
 
 	/* Allocate space for file path. */
 	filel.v[filel.amt] = malloc(sizeof(*filel.v[filel.amt]) *
@@ -583,15 +579,10 @@ init_buffer(Buffer *const b, const char *const path)
 		 * &b->text[i] to b->st.
 		 */
 		while (b->st_size <= b->st_amt) {
-			char **realloc_check;
-
 			b->st_size += ST_SIZE_INCR;
-			realloc_check = realloc(b->st,
-					sizeof(*b->st) * b->st_size);
-			if (realloc_check == NULL)
+			b->st = realloc(b->st, sizeof(*b->st) * b->st_size);
+			if (b->st == NULL)
 				err(EXIT_FAILURE, "realloc failed");
-			else
-				b->st = realloc_check;
 		}
 
 		b->st[b->st_amt++] = &b->text[i];
