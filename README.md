@@ -23,6 +23,12 @@ sudo make uninstall
 Feel free to modify ```config.mk``` to fit your local installation
 needs.
 
+navipage is intended to be built using GNU make. The only known
+POSIX-noncompliant code is [this ifdef statement][ifdef] in
+```config.mk```.
+
+[ifdef]: https://git.sr.ht/~smlavine/navipage/tree/master/item/config.mk#L16
+
 ## Debugging
 
 To compile with debug symbols, set ```DEBUG``` before running
