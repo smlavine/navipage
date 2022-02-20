@@ -11,10 +11,9 @@ LIBS = -lreadline
 
 # flags
 CPPFLAGS = $(INCS) -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\"
-DEBUGFLAGS = -ggdb -O0
 CFLAGS = -std=c99 -Wall -Wextra -Wpedantic
 ifdef DEBUG
-	CFLAGS += $(DEBUGFLAGS)
+	CFLAGS += -ggdb -O0
 endif
 LDFLAGS = -L$(PREFIX)/lib $(LIBS)
 
