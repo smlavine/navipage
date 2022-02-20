@@ -337,12 +337,7 @@ compare_path_basenames(const void *p1, const void *p2)
 	 * don't want. For this reason, we copy the string before passing it to
 	 * basename().
 	 */
-	char *base[2], *copy[2];
-
-	/* Introducing variable 'ret' to store the result of strcmp().
-	 * Returning the result of `-strcmp(base[0], base[1]);` at the end of
-	 * the function after `free()` leads to use-after-free bug.
-	 */
+	char *copy[2];
 	int ret;
 
 	/* p1 and p2 are pointers to pointers to char, but strcmp() arguments
@@ -354,10 +349,7 @@ compare_path_basenames(const void *p1, const void *p2)
 	if (copy[0] == NULL || copy[1] == NULL)
 		err(EXIT_FAILURE, "strdup failed");
 
-	base[0] = basename(copy[0]);
-	base[1] = basename(copy[1]);
-
-	ret = -strcmp(base[0], base[1]);
+	ret = -strcmp(basename(copy[0]), basename(copy[1]));
 
 	free(copy[0]);
 	free(copy[1]);
