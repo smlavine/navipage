@@ -7,7 +7,9 @@ all: options navipage
 
 options:
 	@echo 'navipage build options:'
+	@echo "CPPFLAGS    = $(CPPFLAGS)"
 	@echo "CFLAGS      = $(CFLAGS)"
+	@echo "LDFLAGS     = $(LDFLAGS)"
 	@echo "CC          = $(CC)"
 
 err.o: err.h
