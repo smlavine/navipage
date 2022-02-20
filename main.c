@@ -337,22 +337,22 @@ compare_path_basenames(const void *p1, const void *p2)
 	 * don't want. For this reason, we copy the string before passing it to
 	 * basename().
 	 */
-	char *copy[2];
+	char *copy1, *copy2;
 	int ret;
 
 	/* p1 and p2 are pointers to pointers to char, but strcmp() arguments
 	 * are "pointers to char", hence the following cast plus dereference.
 	 * (Paraphrasing `man 3 qsort`)
 	 */
-	copy[0] = strdup(*(const char **)p1);
-	copy[1] = strdup(*(const char **)p2);
-	if (copy[0] == NULL || copy[1] == NULL)
+	copy1 = strdup(*(const char **)p1);
+	copy2 = strdup(*(const char **)p2);
+	if (copy1 == NULL || copy2 == NULL)
 		err(EXIT_FAILURE, "strdup failed");
 
-	ret = -strcmp(basename(copy[0]), basename(copy[1]));
+	ret = -strcmp(basename(copy1), basename(copy2));
 
-	free(copy[0]);
-	free(copy[1]);
+	free(copy1);
+	free(copy2);
 
 	return ret;
 }
