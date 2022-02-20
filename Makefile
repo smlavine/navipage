@@ -1,5 +1,3 @@
-.POSIX:
-
 include config.mk
 
 SRC = err.c main.c
