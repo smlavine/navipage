@@ -29,7 +29,7 @@ POSIX-noncompliant code is [this ifdef statement][ifdef] in
 
 [ifdef]: https://git.sr.ht/~smlavine/navipage/tree/master/item/config.mk#L16
 
-## Debugging
+### Debugging
 
 To compile with debug symbols, set ```DEBUG``` before running
 ```make```, like ```DEBUG=1 make```. Line numbers and the like will be
