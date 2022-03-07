@@ -38,7 +38,7 @@ present when debugging with tools like ```gdb ./navipage``` or
 
 # Copyright
 
-Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>
+Copyright (C) 2021-2022 Sebastian LaVine <mail@smlavine.com>
 
 navipage is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -1,6 +1,6 @@
 /*
  * navipage - multi-file pager for watching YouTube videos
- * Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>
+ * Copyright (C) 2021-2022 Sebastian LaVine <mail@smlavine.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@
 #define FILEL_SIZE_INCR 4
 
 #define URL   "https://sr.ht/~smlavine/navipage"
-#define USAGE "Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>\n" \
+#define USAGE "Copyright (C) 2021-2022 Sebastian LaVine <mail@smlavine.com>\n" \
 	"This program is free software (GPLv3+); see 'man navipage'\n" \
 	"or <" URL "> for more information.\n" \
 	"Usage: navipage [-dhnrsv] files...\n" \
