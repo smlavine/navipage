@@ -32,7 +32,7 @@ POSIX-noncompliant code is [this ifdef statement][ifdef] in
 ### Debugging
 
 To compile with debug symbols, set ```DEBUG``` before running
-```make```, like ```DEBUG=1 make```. Line numbers and the like will be
+```make```, like ```DEBUG=1 make```. Source code symbols will be
 present when debugging with tools like ```gdb ./navipage``` or
 ```valgrind --leak-check=full --log-file=errors ./navipage```.
 
