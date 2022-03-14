@@ -1,11 +1,19 @@
 /*
- * err - Small error-printing library
- * Copyright (C) 2021 Sebastian LaVine <mail@smlavine.com>
+ * err - Small error-printing library for C
+ * Copyright (C) 2021-2022 Sebastian LaVine <mail@smlavine.com>
  * SPDX-License-Identifier: MPL-2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+/**
+ * @file err.c
+ * @version 1.1.0
+ * @brief Main source code file
+ * @details This file contains definitions and declarations of globally
+ * available functions and variables.
  */
 
 #include <errno.h>
@@ -18,38 +26,9 @@
 
 char *argv0;
 
-/***********************************************************************
- * This file contains six error and warning functions:
- * vwarn(), vewarn(), and verr(), plus variadic wrappers for each.
- *
- ***********************************************************************
- * vwarn() prints argv0, ": ", and a message formatted from the given
- * format string and va_list.
- *
- * warn() is a variadic wrapper for vwarn().
- *
- ***********************************************************************
- * vewarn() calls vwarn(), then prints ": " if the format string is
- * neither NULL nor empty, then prints the value of strerror(errno) and
- * a newline.
- *
- * ewarn() is a variadic wrapper for vewarn().
- *
- ***********************************************************************
- * verr() calls vewarn() and exits the program with the provided code.
- *
- * err() is a variadic wrapper for verr().
- *
- ***********************************************************************
- * If argv0 is not set by the caller, behavior is undefined.
- *
- * Some functions in this file are named the same as functions
- * provided by libbsd's err.h. This file does NOT implement those
- * functions, and might behave completely differently.
- *
- ***********************************************************************
+/**
+ * @details Prints argv0, ": ", and the printf(3)-like-formatted error message.
  */
-
 void
 vwarn(const char *fmt, va_list ap)
 {
@@ -57,21 +36,27 @@ vwarn(const char *fmt, va_list ap)
 	vfprintf(stderr, fmt, ap);
 }
 
+/**
+ * @details Calls vwarn(), then prints ": ", strerror(errno), and a newline.
+ */
 void
 vewarn(const char *fmt, va_list ap)
 {
-	/* strerror(3) must be called before anything else is done,
-	 * otherwise errno could be modified by function calls made
-	 * between when vewarn() was called and when output is printed.
-	 */
-	const char *errstr = strerror(errno);
-
 	vwarn(fmt, ap);
-	if (fmt != NULL && fmt[0] != '\0')
-		fputs(": ", stderr);
-	fprintf(stderr, "%s\n", errstr);
+	if (errno != 0) {
+		/* To avoid two colons being printed, like
+		 * "argv0: : No such file or directory" */
+		if (fmt != NULL && fmt[0] != '\0') {
+			fputs(": ", stderr);
+		}
+		fprintf(stderr, "%s", strerror(errno));
+	}
+	fputc('\n', stderr);
 }
 
+/**
+ * @details Calls vewarn() and exits the program with the provided code.
+ */
 void
 verr(const int code, const char *fmt, va_list ap)
 {
@@ -80,6 +65,9 @@ verr(const int code, const char *fmt, va_list ap)
 	exit(code);
 }
 
+/**
+ * @details Variadic wrapper for vwarn().
+ */
 void
 warn(const char *fmt, ...)
 {
@@ -90,6 +78,9 @@ warn(const char *fmt, ...)
 	va_end(ap);
 }
 
+/**
+ * @details Variadic wrapper for vewarn().
+ */
 void
 ewarn(const char *fmt, ...)
 {
@@ -100,6 +91,9 @@ ewarn(const char *fmt, ...)
 	va_end(ap);
 }
 
+/**
+ * @details Variadic wrapper for verr().
+ */
 void
 err(const int code, const char *fmt, ...)
 {
