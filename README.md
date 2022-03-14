@@ -63,6 +63,7 @@ navipage uses the following libraries:
 - [rogueutil](https://github.com/sakhmatd/rogueutil)
   - rogueutil is licensed under the terms of the Apache license v2.0.
     See ```LICENSE.rogueutil``` for details.
+- [err](https://sr.ht/~smlavine/err)
 
 # Contributing
 
