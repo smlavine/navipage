@@ -333,6 +333,14 @@ clear_current_line(void)
 static int
 compare_path_basenames(const void *p1, const void *p2)
 {
+	/* To quote the Linux man page for qsort(3):
+	 *     The actual arguments to this function are "pointers to
+	 *     pointers to char", but strcmp(3) arguments are "pointers to
+	 *     char", hence the following cast plus dereference.
+	 * See <https://www.man7.org/linux/man-pages/man3/qsort.3.html>, or
+	 * `man 3 qsort`.
+	 */
+	const char **strp1 = (const char **)p1, **strp2 = (const char **)p2;
 	/* POSIX-compliant basename() may modify the path variable, which we
 	 * don't want. For this reason, we copy the string before passing it to
 	 * basename().
@@ -340,12 +348,8 @@ compare_path_basenames(const void *p1, const void *p2)
 	char *copy1, *copy2;
 	int ret;
 
-	/* p1 and p2 are pointers to pointers to char, but strcmp() arguments
-	 * are "pointers to char", hence the following cast plus dereference.
-	 * (Paraphrasing `man 3 qsort`)
-	 */
-	copy1 = strdup(*(const char **)p1);
-	copy2 = strdup(*(const char **)p2);
+	copy1 = strdup(*strp1);
+	copy2 = strdup(*strp2);
 	if (copy1 == NULL || copy2 == NULL)
 		err(EXIT_FAILURE, "strdup failed");
 
